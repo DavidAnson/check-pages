@@ -15,13 +15,14 @@
     "url": "https://github.com/DavidAnson/check-pages/issues"
   },
   "license": "MIT",
+  "main": "checkPages.js",
   "engines": {
     "node": ">= 0.8.0"
   },
   "scripts": {
     "test": "nodeunit",
     "test-cover": "istanbul cover node_modules/nodeunit/bin/nodeunit",
-    "lint": "eslint tasks/checkPages.js test"
+    "lint": "eslint checkPages.js test"
   },
   "dependencies": {
     "cheerio": "^0.18.0",

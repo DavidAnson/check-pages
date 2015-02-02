@@ -5,13 +5,15 @@ var domain = require('domain');
 var path = require('path');
 var zlib = require('zlib');
 var nock = require('nock');
-var checkPages = require('../tasks/checkPages.js');
-var noop = function() {};
+var checkPages = require('../checkPages.js');
 
 /* Infrastructure */
 
 // Block all unexpected network calls
 nock.disableNetConnect();
+
+// Placeholder
+function noop() {}
 
 // Run a test
 function runTest(options, callback) {

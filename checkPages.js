@@ -18,7 +18,7 @@ module.exports = function(host, options, done) {
   var url = require('url');
 
   // Global variables
-  var userAgent = 'check-pages/' + require('../package.json').version;
+  var userAgent = 'check-pages/' + require('./package.json').version;
   var pendingCallbacks = [];
   var issues = [];
 
@@ -219,22 +219,22 @@ module.exports = function(host, options, done) {
   }
 
   // Check for required host functions
-  if (!host || (typeof(host) !== 'object')) {
+  if (!host || (typeof (host) !== 'object')) {
     throw new Error('host parameter is missing or invalid; it should be an object');
   }
   ['logOk', 'logError', 'fail'].forEach(function(name) {
-    if (!host[name] || (typeof(host[name]) !== 'function')) {
+    if (!host[name] || (typeof (host[name]) !== 'function')) {
       throw new Error('host.' + name + ' is missing or invalid; it should be a function');
     }
   });
 
   // Check for required callback
-  if (!done || (typeof(done) !== 'function')) {
+  if (!done || (typeof (done) !== 'function')) {
     throw new Error('done is missing or invalid; it should be a function');
   }
 
   // Check for required options
-  if (!options || (typeof(options) !== 'object')) {
+  if (!options || (typeof (options) !== 'object')) {
     throw new Error('options parameter is missing or invalid; it should be an object');
   }
   if (!options.pageUrls || !Array.isArray(options.pageUrls)) {
