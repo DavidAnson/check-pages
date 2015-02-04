@@ -24,7 +24,7 @@ module.exports = function(host, options, done) {
 
   // Logs an error for a page
   function logPageError(page, message) {
-    host.logError(message);
+    host.error(message);
     issues.push([page, message]);
   }
 
@@ -74,12 +74,12 @@ module.exports = function(host, options, done) {
         .on('end', function() {
           var elapsed = Date.now() - start;
           if ((200 <= res.statusCode) && (res.statusCode < 300)) {
-            host.logOk('Link: ' + link + ' (' + elapsed + 'ms)');
+            host.log('Link: ' + link + ' (' + elapsed + 'ms)');
             if (hash) {
               hash.end();
               var contentHash = hash.read();
               if (linkHash.toUpperCase() === contentHash.toUpperCase()) {
-                host.logOk('Hash: ' + link);
+                host.log('Hash: ' + link);
               } else {
                 logError('Hash error (' + contentHash.toLowerCase() + '): ' + link);
               }
@@ -144,9 +144,9 @@ module.exports = function(host, options, done) {
           logError('Bad page (' + res.statusCode + '): ' + page + ' (' + elapsed + 'ms)');
         } else {
           if (page === res.request.href) {
-            host.logOk('Page: ' + page + ' (' + elapsed + 'ms)');
+            host.log('Page: ' + page + ' (' + elapsed + 'ms)');
           } else {
-            host.logOk('Page: ' + page + ' -> ' + res.request.href + ' (' + elapsed + 'ms)');
+            host.log('Page: ' + page + ' -> ' + res.request.href + ' (' + elapsed + 'ms)');
             // Update page to account for redirects
             page = res.request.href;
           }
@@ -222,7 +222,7 @@ module.exports = function(host, options, done) {
   if (!host || (typeof (host) !== 'object')) {
     throw new Error('host parameter is missing or invalid; it should be an object');
   }
-  ['logOk', 'logError', 'fail'].forEach(function(name) {
+  ['log', 'error'].forEach(function(name) {
     if (!host[name] || (typeof (host[name]) !== 'function')) {
       throw new Error('host.' + name + ' is missing or invalid; it should be a function');
     }
@@ -291,6 +291,7 @@ module.exports = function(host, options, done) {
 
   // Queue 'done' callback
   pendingCallbacks.push(function() {
+    var err;
     var issueCount = issues.length;
     if (issueCount) {
       if (options.summary) {
@@ -305,15 +306,12 @@ module.exports = function(host, options, done) {
           }
           summary += '  ' + message + '\n';
         });
-        host.logError(summary);
+        host.error(summary);
       }
-      var warning = issueCount + ' issue' + (issueCount > 1 ? 's' : '') + ', see above.';
-      if (!options.summary) {
-        warning += ' (Set options.summary for a summary.)';
-      }
-      host.fail(warning);
+      err = new Error(issueCount + ' issue' + (issueCount > 1 ? 's' : '') + '.' +
+        (options.summary ? '' : ' (Set options.summary for a summary.)'));
     }
-    done(issueCount);
+    done(err, issueCount);
   });
 
   // Process the queue
