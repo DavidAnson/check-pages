@@ -1,4 +1,4 @@
-# grunt-check-pages
+# check-pages
 
 > Checks various aspects of a web page for correctness.
 
@@ -9,29 +9,20 @@
 [![License][license-image]][license-url]
 
 
-## Getting Started
-
-This plugin requires Grunt `~0.4.4`
-
-If you haven't used [Grunt](http://gruntjs.com/) before, be sure to check out the [Getting Started](http://gruntjs.com/getting-started) guide, as it explains how to create a [Gruntfile](http://gruntjs.com/sample-gruntfile) as well as install and use Grunt plugins. Once you're familiar with that process, you may install this plugin with this command:
+## Install
 
 ```shell
-npm install grunt-check-pages --save-dev
+npm install check-pages --save-dev
 ```
 
-Once the plugin has been installed, it may be enabled inside your Gruntfile with this line of JavaScript:
+If you're using [Grunt](http://gruntjs.com/), the [`grunt-check-pages`](https://www.npmjs.com/package/grunt-check-pages) package wraps this functionality in a Grunt task.
 
-```js
-grunt.loadNpmTasks('grunt-check-pages');
-```
+If you're using [Gulp](http://gulpjs.com/) or another framework, the example below shows how to integrate `check-pages` into your workflow.
 
 
-## The "checkPages" task
+## Overview
 
-
-### Overview
-
-An important aspect of creating a web site is validating the structure, content, and configuration of the site's pages. The `checkPages` task provides an easy way to integrate this testing into your normal Grunt workflow.
+An important aspect of creating a web site is validating the structure, content, and configuration of the site's pages. The `checkPages` task provides an easy way to integrate this testing into your workflow.
 
 By providing a list of pages to scan, the task can:
 
@@ -44,66 +35,109 @@ By providing a list of pages to scan, the task can:
 * Validate a page takes advantage of [compression for better performance](https://developers.google.com/speed/docs/insights/EnableCompression)
 
 
-### Usage
+## Usage
 
-In your project's Gruntfile, add a section named `checkPages` to the data object passed into `grunt.initConfig()`.
+To use `check-pages` with Gulp, create a task and invoke `checkPages`, passing the task's callback function.
 The following example includes all supported options:
 
 ```js
-grunt.initConfig({
-  checkPages: {
-    development: {
-      options: {
-        pageUrls: [
-          'http://localhost:8080/',
-          'http://localhost:8080/blog',
-          'http://localhost:8080/about.html'
-        ],
-        checkLinks: true,
-        onlySameDomain: true,
-        queryHashes: true,
-        noRedirects: true,
-        noLocalLinks: true,
-        linksToIgnore: [
-          'http://localhost:8080/broken.html'
-        ],
-        checkXhtml: true,
-        checkCaching: true,
-        checkCompression: true,
-        maxResponseTime: 200,
-        userAgent: 'custom-user-agent/1.2.3',
-        summary: true
-      }
-    },
-    production: {
-      options: {
-        pageUrls: [
-          'http://example.com/',
-          'http://example.com/blog',
-          'http://example.com/about.html'
-        ],
-        checkLinks: true,
-        maxResponseTime: 500
-      }
-    }
-  }
+var gulp = require("gulp");
+var checkPages = require("check-pages");
+
+gulp.task("checkDev", [ "start-development-server" ], function(callback) {
+  var options = {
+    pageUrls: [
+      'http://localhost:8080/',
+      'http://localhost:8080/blog',
+      'http://localhost:8080/about.html'
+    ],
+    checkLinks: true,
+    onlySameDomain: true,
+    queryHashes: true,
+    noRedirects: true,
+    noLocalLinks: true,
+    linksToIgnore: [
+      'http://localhost:8080/broken.html'
+    ],
+    checkXhtml: true,
+    checkCaching: true,
+    checkCompression: true,
+    maxResponseTime: 200,
+    userAgent: 'custom-user-agent/1.2.3',
+    summary: true
+  };
+  checkPages(console, options, callback);
+});
+
+gulp.task("checkProd", function(callback) {
+  var options = {
+    pageUrls: [
+      'http://example.com/',
+      'http://example.com/blog',
+      'http://example.com/about.html'
+    ],
+    checkLinks: true,
+    maxResponseTime: 500
+  };
+  checkPages(console, options, callback);
 });
 ```
 
 
+## API
+
+```js
+/**
+ * Checks various aspects of a web page for correctness.
+ *
+ * @param {object} host Specifies the environment.
+ * @param {object} options Configures the task.
+ * @param {function} done Callback function.
+ * @returns {void}
+ */
+module.exports = function(host, options, done) { ... }
+```
+
+
+### Host
+
+Type: `Object`  
+*Required*
+
+Specifies the task environment.
+
+For convenience, `console` can be passed directly (as in the example above).
+
+#### log
+
+Type: `Function` (parameters: `String`)  
+*Required*
+
+Function used to log informational messages.
+
+#### error
+
+Type: `Function` (parameters: `String`)  
+*Required*
+
+Function used to log error messages.
+
+
 ### Options
+
+Type: `Object`  
+*Required*
+
+Specifies the task configuration.
 
 #### pageUrls
 
 Type: `Array` of `String`  
-Default value: `undefined`  
 *Required*
 
 `pageUrls` specifies a list of URLs for web pages the task will check.
 
 URLs must be absolute and can point to local or remote content. The `pageUrls` array can be empty, but must be present.
-
-To store the list outside `Gruntfile.js`, read the array from a JSON file instead: `pageUrls: grunt.file.readJSON('pageUrls.json')`.
 
 #### checkLinks
 
@@ -231,7 +265,7 @@ Requests that take more time will trigger a failure (but are still checked for o
 #### userAgent
 
 Type: `String`  
-Default value: `grunt-check-pages/x.y.z`
+Default value: `check-pages/x.y.z`
 
 `userAgent` specifies the value of the HTTP [`User-Agent`](https://tools.ietf.org/html/rfc2616#section-14.43) header sent with all page/link requests.
 
@@ -249,28 +283,16 @@ This makes it easy to pick out failures when running tests against many pages.
 
 ## Release History
 
-* 0.1.0 - Initial release, support for `checkLinks` and `checkXhtml`.
-* 0.1.1 - Tweak README for better formatting.
-* 0.1.2 - Support page-only mode (no link or XHTML checks), show response time for requests.
-* 0.1.3 - Support `maxResponseTime` option, buffer all page responses, add "no-cache" header to requests.
-* 0.1.4 - Support `checkCaching` and `checkCompression` options, improve error handling, use [`gruntMock`](https://www.npmjs.com/package/gruntmock).
-* 0.1.5 - Support `userAgent` option, weak entity tags, update `nock` dependency.
-* 0.2.0 - Support `noLocalLinks` option, rename `disallowRedirect` option to `noRedirects`, switch to [`ESLint`](http://eslint.org/), update `superagent` and `nock` dependencies.
-* 0.3.0 - Support `queryHashes` option for CRC-32/MD5/SHA-1, update `superagent` dependency.
-* 0.4.0 - Rename `onlySameDomainLinks` option to `onlySameDomain`, fix handling of redirected page links, use page order for links, update all dependencies.
-* 0.5.0 - Show location of redirected links with `noRedirects` option, switch to `crc-hash` dependency.
-* 0.6.0 - Support `summary` option, update `crc-hash`, `grunt-eslint`, `nock` dependencies.
-* 0.6.1 - Add badges for automated build and coverage info to README (along with npm, GitHub, and license).
-* 0.6.2 - Switch from `superagent` to `request`, update `grunt-eslint` and `nock` dependencies.
+* 0.7.0 - Initial release, extract functionality from `grunt-check-pages` for use with Gulp.
 
 
-[npm-image]: https://img.shields.io/npm/v/grunt-check-pages.svg
-[npm-url]: https://www.npmjs.com/package/grunt-check-pages
-[github-tag-image]: https://img.shields.io/github/tag/DavidAnson/grunt-check-pages.svg
-[github-tag-url]: https://github.com/DavidAnson/grunt-check-pages
-[travis-image]: https://img.shields.io/travis/DavidAnson/grunt-check-pages.svg
-[travis-url]: https://travis-ci.org/DavidAnson/grunt-check-pages
-[coveralls-image]: https://img.shields.io/coveralls/DavidAnson/grunt-check-pages.svg
-[coveralls-url]: https://coveralls.io/r/DavidAnson/grunt-check-pages
-[license-image]: https://img.shields.io/npm/l/grunt-check-pages.svg
+[npm-image]: https://img.shields.io/npm/v/check-pages.svg
+[npm-url]: https://www.npmjs.com/package/check-pages
+[github-tag-image]: https://img.shields.io/github/tag/DavidAnson/check-pages.svg
+[github-tag-url]: https://github.com/DavidAnson/check-pages
+[travis-image]: https://img.shields.io/travis/DavidAnson/check-pages.svg
+[travis-url]: https://travis-ci.org/DavidAnson/check-pages
+[coveralls-image]: https://img.shields.io/coveralls/DavidAnson/check-pages.svg
+[coveralls-url]: https://coveralls.io/r/DavidAnson/check-pages
+[license-image]: https://img.shields.io/npm/l/check-pages.svg
 [license-url]: http://opensource.org/licenses/MIT

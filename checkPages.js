@@ -8,6 +8,14 @@
 
 'use strict';
 
+/**
+ * Checks various aspects of a web page for correctness.
+ *
+ * @param {object} host Specifies the environment.
+ * @param {object} options Configures the task.
+ * @param {function} done Callback function.
+ * @returns {void}
+ */
 module.exports = function(host, options, done) {
   // Imports
   var cheerio = require('cheerio');
