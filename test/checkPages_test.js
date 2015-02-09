@@ -60,7 +60,7 @@ function testOutput(test, log, error, exception) {
         test.equal(context.log.shift().replace(/\(\d+ms\)/g, '(00ms)'), log.shift(), 'Wrong log item');
       }
       while (context.error.length && error.length) {
-        test.equal(context.error.shift().replace(/\(\d+ms\)/g, '(00ms)'), error.shift(), 'Wrong error item');
+        test.equal(context.error.shift().replace(/\(\d+ms\)/g, '(00ms)').replace(/ECONNREFUSED \d+\.\d+\.\d+\.\d+:\d+/g, 'ECONNREFUSED'), error.shift(), 'Wrong error item');
       }
     }
     test.done();
