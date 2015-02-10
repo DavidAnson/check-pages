@@ -1,7 +1,7 @@
 {
   "name": "check-pages",
   "description": "Checks various aspects of a web page for correctness.",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "homepage": "https://github.com/DavidAnson/check-pages",
   "author": {
     "name": "David Anson",
