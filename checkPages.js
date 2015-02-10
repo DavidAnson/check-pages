@@ -93,7 +93,7 @@ module.exports = function(host, options, done) {
               }
             }
           } else if (useGetRequest) {
-            if ((page !== res.request.href) && options.noRedirects) {
+            if (((300 <= res.statusCode) && (res.statusCode < 400)) && options.noRedirects) {
               logError('Redirected link (' + res.statusCode + '): ' + link + ' -> ' + (res.headers.location || '[Missing Location header]') + ' (' + elapsed + 'ms)');
             } else {
               logError('Bad link (' + res.statusCode + '): ' + link + ' (' + elapsed + 'ms)');

@@ -441,6 +441,30 @@ exports.checkPages = {
        '2 issues. (Set options.summary for a summary.)'));
   },
 
+  checkLinksInvalidNoRedirects: function(test) {
+    test.expect(10);
+    nockFiles(['brokenLinks.html']);
+    nockLinks(['link0', 'link1', 'link2']);
+    nock('http://example.com')
+      .head('/broken0').reply(404)
+      .get('/broken0').reply(404)
+      .head('/broken1').reply(500)
+      .get('/broken1').reply(500);
+    runTest({
+      pageUrls: ['http://example.com/brokenLinks.html'],
+      checkLinks: true,
+      noRedirects: true
+    },
+    testOutput(test,
+      ['Page: http://example.com/brokenLinks.html (00ms)',
+       'Link: http://example.com/link0 (00ms)',
+       'Link: http://example.com/link1 (00ms)',
+       'Link: http://example.com/link2 (00ms)'],
+      ['Bad link (404): http://example.com/broken0 (00ms)',
+       'Bad link (500): http://example.com/broken1 (00ms)'],
+       '2 issues. (Set options.summary for a summary.)'));
+  },
+
   checkLinksRetryWhenHeadFails: function(test) {
     test.expect(5);
     nockFiles(['retryWhenHeadFails.html']);
