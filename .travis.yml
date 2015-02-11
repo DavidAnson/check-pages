@@ -5,3 +5,4 @@ node_js:
   - iojs
 script: "npm run-script test-cover"
 after_script: "npm install coveralls && cat ./coverage/lcov.info | coveralls"
+sudo: false
