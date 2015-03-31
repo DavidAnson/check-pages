@@ -417,6 +417,28 @@ exports.checkPages = {
       []));
   },
 
+  checkLinksFragmentIdentifier: function(test) {
+    test.expect(10);
+    nockFiles(['fragmentIdentifier.html']);
+    nockLinks([
+      'fragmentIdentifier.html', 'fragmentIdentifier.html',
+      'fragmentIdentifier.html?name=value', 'link0', 'link1',
+      'link2?name=value']);
+    runTest({
+      pageUrls: ['http://example.com/fragmentIdentifier.html'],
+      checkLinks: true
+    },
+    testOutput(test,
+      ['Page: http://example.com/fragmentIdentifier.html (00ms)',
+       'Link: http://example.com/fragmentIdentifier.html# (00ms)',
+       'Link: http://example.com/fragmentIdentifier.html#fragment (00ms)',
+       'Link: http://example.com/fragmentIdentifier.html?name=value#fragment (00ms)',
+       'Link: http://example.com/link0# (00ms)',
+       'Link: http://example.com/link1#fragment (00ms)',
+       'Link: http://example.com/link2?name=value#fragment (00ms)'],
+      []));
+  },
+
   checkLinksInvalid: function(test) {
     test.expect(10);
     nockFiles(['brokenLinks.html']);
@@ -480,7 +502,7 @@ exports.checkPages = {
       []));
   },
 
-  checkLinksonlySameDomain: function(test) {
+  checkLinksOnlySameDomain: function(test) {
     test.expect(5);
     nockFiles(['externalLink.html']);
     nockLinks(['link']);
