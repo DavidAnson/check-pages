@@ -29,6 +29,7 @@ module.exports = function(host, options, done) {
   var userAgent = 'check-pages/' + require('./package.json').version;
   var pendingCallbacks = [];
   var issues = [];
+  var testedLinks = [];
 
   // Logs an error for a page
   function logPageError(page, message) {
@@ -46,6 +47,18 @@ module.exports = function(host, options, done) {
   // Returns a callback to test the specified link
   function testLink(page, link, retryWithGet) {
     return function (callback) {
+      // Check if the link has already been tested (ignore client-side hash)
+      if (!retryWithGet) {
+        var parsedLink = url.parse(link);
+        parsedLink.hash = null;
+        var noHashLink = url.format(parsedLink);
+        if (testedLinks.indexOf(noHashLink) !== -1) {
+          host.log('Visited link: ' + link);
+          return callback();
+        }
+        testedLinks.push(noHashLink);
+      }
+      // Test the link
       var logError = logPageError.bind(null, page);
       var start = Date.now();
       var hash = null;
@@ -162,19 +175,12 @@ module.exports = function(host, options, done) {
             // Check the page's links for validity (i.e., HTTP HEAD returns OK)
             var $ = cheerio.load(body);
             var index = 0;
-            index = addLinks($, 'a', 'href', page, index);
-            index = addLinks($, 'area', 'href', page, index);
-            index = addLinks($, 'audio', 'src', page, index);
-            index = addLinks($, 'embed', 'src', page, index);
-            index = addLinks($, 'iframe', 'src', page, index);
-            index = addLinks($, 'img', 'src', page, index);
-            index = addLinks($, 'input', 'src', page, index);
-            index = addLinks($, 'link', 'href', page, index);
-            index = addLinks($, 'object', 'data', page, index);
-            index = addLinks($, 'script', 'src', page, index);
-            index = addLinks($, 'source', 'src', page, index);
-            index = addLinks($, 'track', 'src', page, index);
-            index = addLinks($, 'video', 'src', page, index);
+            ['a href', 'area href', 'audio src', 'embed src', 'iframe src', 'img src',
+              'input src', 'link href', 'object data', 'script src', 'source src',
+              'track src', 'video src'].forEach(function (pair) {
+              var items = pair.split(' ');
+              index = addLinks($, items[0], items[1], page, index);
+            });
           }
           if (options.checkXhtml) {
             // Check the page's structure for XHTML compliance
