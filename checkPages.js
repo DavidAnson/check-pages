@@ -47,9 +47,14 @@ module.exports = function(host, options, done) {
   // Returns a callback to test the specified link
   function testLink(page, link, retryWithGet) {
     return function (callback) {
+      var logError = logPageError.bind(null, page);
       // Check if the link has already been tested (ignore client-side hash)
       if (!retryWithGet) {
         var parsedLink = url.parse(link);
+        // Warn for empty fragments (even when skipping)
+        if (options.noEmptyFragments && (parsedLink.hash === '#')) {
+          logError('Empty fragment: ' + link);
+        }
         parsedLink.hash = null;
         var noHashLink = url.format(parsedLink);
         if (testedLinks.indexOf(noHashLink) !== -1) {
@@ -59,7 +64,6 @@ module.exports = function(host, options, done) {
         testedLinks.push(noHashLink);
       }
       // Test the link
-      var logError = logPageError.bind(null, page);
       var start = Date.now();
       var hash = null;
       var linkHash = null;
@@ -260,6 +264,7 @@ module.exports = function(host, options, done) {
   options.onlySameDomain = !!options.onlySameDomain;
   options.noRedirects = !!options.noRedirects;
   options.noLocalLinks = !!options.noLocalLinks;
+  options.noEmptyFragments = !!options.noEmptyFragments;
   options.queryHashes = !!options.queryHashes;
   options.linksToIgnore = options.linksToIgnore || [];
   if (!Array.isArray(options.linksToIgnore)) {

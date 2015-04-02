@@ -56,6 +56,7 @@ gulp.task("checkDev", [ "start-development-server" ], function(callback) {
     queryHashes: true,
     noRedirects: true,
     noLocalLinks: true,
+    noEmptyFragments: true,
     linksToIgnore: [
       'http://localhost:8080/broken.html'
     ],
@@ -215,6 +216,16 @@ The list of host names recognized as `localhost` are:
 * localhost
 * 127.0.0.1 (and the rest of the `127.0.0.0/8` address block)
 * ::1 (and its expanded forms)
+
+#### noEmptyFragments
+
+Type: `Boolean`  
+Default value: `false`  
+Used by: `checkLinks`
+
+Set this option to `true` to fail the task if any links contain an empty [fragment identifier (hash)](http://en.wikipedia.org/wiki/Fragment_identifier) such as `<a href="#">`.
+
+This is useful to identify placeholder links that haven't been updated.
 
 #### linksToIgnore
 

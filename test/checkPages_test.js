@@ -574,14 +574,37 @@ exports.checkPages = {
        'Link: http://[::1]/ (00ms)'],
        // 'Link: http://[ff02::1]/ (00ms)',
        // 'Link: http://[0000:0000:0000:0000:0000:0000:0000:0001]/ (00ms)',
-      [
-       'Local link: http://localhost/',
+      ['Local link: http://localhost/',
        'Local link: http://127.0.0.1/',
        'Local link: http://[::1]/',
        'Link error (Nock: Not allow net connect for "ff02:80"): http://[ff02::1]/ (00ms)',
        'Local link: http://[0000:0000:0000:0000:0000:0000:0000:0001]/',
        'Link error (Nock: Not allow net connect for "0000:80"): http://[0000:0000:0000:0000:0000:0000:0000:0001]/ (00ms)'],
        '6 issues. (Set options.summary for a summary.)'));
+  },
+
+  checkLinksNoEmptyFragments: function(test) {
+    test.expect(13);
+    nockFiles(['fragmentIdentifier.html']);
+    nockLinks([
+      'fragmentIdentifier.html', 'fragmentIdentifier.html?name=value',
+      'link', 'link?name=value']);
+    runTest({
+      pageUrls: ['http://example.com/fragmentIdentifier.html'],
+      checkLinks: true,
+      noEmptyFragments: true
+    },
+    testOutput(test,
+      ['Page: http://example.com/fragmentIdentifier.html (00ms)',
+       'Link: http://example.com/fragmentIdentifier.html# (00ms)',
+       'Visited link: http://example.com/fragmentIdentifier.html#fragment',
+       'Link: http://example.com/fragmentIdentifier.html?name=value#fragment (00ms)',
+       'Link: http://example.com/link#fragment (00ms)',
+       'Visited link: http://example.com/link#',
+       'Link: http://example.com/link?name=value#fragment (00ms)'],
+      ['Empty fragment: http://example.com/fragmentIdentifier.html#',
+       'Empty fragment: http://example.com/link#'],
+       '2 issues. (Set options.summary for a summary.)'));
   },
 
   checkLinksQueryHashes: function(test) {
