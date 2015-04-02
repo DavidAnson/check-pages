@@ -577,9 +577,9 @@ exports.checkPages = {
       ['Local link: http://localhost/',
        'Local link: http://127.0.0.1/',
        'Local link: http://[::1]/',
-       'Link error (Nock: Not allow net connect for "ff02:80"): http://[ff02::1]/ (00ms)',
+       'Link error (Nock: Not allow net connect for "ff02:80/"): http://[ff02::1]/ (00ms)',
        'Local link: http://[0000:0000:0000:0000:0000:0000:0000:0001]/',
-       'Link error (Nock: Not allow net connect for "0000:80"): http://[0000:0000:0000:0000:0000:0000:0000:0001]/ (00ms)'],
+       'Link error (Nock: Not allow net connect for "0000:80/"): http://[0000:0000:0000:0000:0000:0000:0000:0001]/ (00ms)'],
        '6 issues. (Set options.summary for a summary.)'));
   },
 
