@@ -46,7 +46,7 @@ module.exports = function(host, options, done) {
 
   // Returns a callback to test the specified link
   function testLink(page, link, retryWithGet) {
-    return function (callback) {
+    return function(callback) {
       var logError = logPageError.bind(null, page);
       // Check if the link has already been tested (ignore client-side hash)
       if (!retryWithGet) {
@@ -158,7 +158,7 @@ module.exports = function(host, options, done) {
 
   // Returns a callback to test the specified page
   function testPage(page) {
-    return function (callback) {
+    return function(callback) {
       var logError = logPageError.bind(null, page);
       var start = Date.now();
       request.get(page, function(err, res, body) {
@@ -181,7 +181,7 @@ module.exports = function(host, options, done) {
             var index = 0;
             ['a href', 'area href', 'audio src', 'embed src', 'iframe src', 'img src',
               'input src', 'link href', 'object data', 'script src', 'source src',
-              'track src', 'video src'].forEach(function (pair) {
+              'track src', 'video src'].forEach(function(pair) {
               var items = pair.split(' ');
               index = addLinks($, items[0], items[1], page, index);
             });
