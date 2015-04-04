@@ -1,12 +1,9 @@
 {
   "name": "check-pages",
   "description": "Checks various aspects of a web page for correctness.",
-  "version": "0.7.1",
+  "version": "0.8.0",
   "homepage": "https://github.com/DavidAnson/check-pages",
-  "author": {
-    "name": "David Anson",
-    "url": "http://dlaa.me/"
-  },
+  "author": "David Anson (http://dlaa.me/)",
   "repository": {
     "type": "git",
     "url": "https://github.com/DavidAnson/check-pages.git"

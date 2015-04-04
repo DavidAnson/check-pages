@@ -296,6 +296,7 @@ This makes it easy to pick out failures when running tests against many pages.
 
 * 0.7.0 - Initial release, extract functionality from `grunt-check-pages` for use with Gulp.
 * 0.7.1 - Fix misreporting of "Bad link" for redirected links when noRedirects enabled.
+* 0.8.0 - Suppress redundant link checks, support "noEmptyFragments" option, update dependencies.
 
 
 [npm-image]: https://img.shields.io/npm/v/check-pages.svg
