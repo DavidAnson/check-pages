@@ -35,10 +35,12 @@ function requestFile(uri) {
   var parsedUri = ensureFileProtocol(uri);
   var stream = fs.createReadStream(parsedUri.pathname);
   // Make stream look like http.ClientRequest
-  stream.abort = function unused() {};
+  stream.abort = function onAbort() {};
   stream.on('readable', function onReadable() {
     stream.emit('response', responseFor(uri));
-    stream.emit('end');
+  });
+  stream.on('data', function onData() {
+    // Flowing mode
   });
   return stream;
 }
