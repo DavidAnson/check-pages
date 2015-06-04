@@ -6,6 +6,7 @@ var path = require('path');
 var zlib = require('zlib');
 var nock = require('nock');
 var checkPages = require('../checkPages.js');
+var requestFile = require('../requestFile.js');
 
 /* Infrastructure */
 
@@ -59,7 +60,13 @@ function testOutput(test, log, error, exception) {
         test.equal(context.log.shift().replace(/\(\d+ms\)/g, '(00ms)'), log.shift(), 'Wrong log item');
       }
       while (context.error.length && error.length) {
-        test.equal(context.error.shift().replace(/\(\d+ms\)/g, '(00ms)').replace(/ECONNREFUSED \d+\.\d+\.\d+\.\d+:\d+/g, 'ECONNREFUSED'), error.shift(), 'Wrong error item');
+        test.equal(
+          context.error.shift()
+            .replace(/\(\d+ms\)/g, '(00ms)')
+            .replace(/ECONNREFUSED \d+\.\d+\.\d+\.\d+:\d+/g, 'ECONNREFUSED')
+            .replace(/ENOENT, open \'[^']*\'/g, 'ENOENT'),
+          error.shift(),
+          'Wrong error item');
       }
     }
     test.done();
@@ -1180,5 +1187,280 @@ exports.checkPages = {
       ['Page: http://example.com/page (00ms)'],
       ['Link error (connect ECONNREFUSED): http://localhost:9999/notListening (00ms)'],
        '1 issue. (Set options.summary for a summary.)'));
+  },
+
+  // Local content
+
+  requestFileRequiresFileProtocol: function(test) {
+    test.expect(1);
+    test.throws(function() {
+      requestFile('http://example.com');
+    }, /URI does not use the 'file:' protocol: http:\/\/example\.com/);
+    test.done();
+  },
+
+  requestFileGetRequiresFileProtocol: function(test) {
+    test.expect(1);
+    test.throws(function() {
+      requestFile.get('http://example.com');
+    }, /URI does not use the 'file:' protocol: http:\/\/example\.com/);
+    test.done();
+  },
+
+  localContentPageUrls: function(test) {
+    test.expect(5);
+    runTest({
+        pageUrls: [
+          'test/validPage.html',
+          'file:test/validPage.html'
+        ]
+      },
+    testOutput(test,
+      ['Page: file:test/validPage.html (00ms)',
+       'Page: file:test/validPage.html (00ms)'],
+      []));
+  },
+
+  localContentPageUrlsNotFound: function(test) {
+    test.expect(5);
+    runTest({
+      pageUrls: ['notFound']
+    },
+    testOutput(test,
+      [],
+      ['Page error (ENOENT): file:notFound (00ms)'],
+       '1 issue. (Set options.summary for a summary.)'));
+  },
+
+  localContentCheckLinks: function(test) {
+    test.expect(21);
+    nockLinks(['link1'], 'http://example.com');
+    nockLinks(['link2'], 'http://example.org');
+    nockRedirect('movedPermanently', 301);
+    nockRedirect('movedTemporarily', 302);
+    runTest({
+        pageUrls: [
+          'test/validPage.html'
+        ],
+        checkLinks: true
+      },
+    testOutput(test,
+      ['Page: file:test/validPage.html (00ms)',
+       'Link: http://example.com/link1 (00ms)',
+       'Link: http://example.org/link2 (00ms)',
+       'Link: http://example.com/movedPermanently (00ms)',
+       'Link: http://example.com/movedTemporarily (00ms)'],
+      ['Link error (ENOENT): file:test/link3 (00ms)',
+       'Link error (ENOENT): file:test/link4 (00ms)',
+       'Link error (ENOENT): file:test/link5 (00ms)',
+       'Link error (ENOENT): file:test/link6 (00ms)',
+       'Link error (ENOENT): file:test/link7 (00ms)',
+       'Link error (ENOENT): file:test/link8 (00ms)',
+       'Link error (ENOENT): file:test/link0 (00ms)',
+       'Link error (ENOENT): file:test/link9 (00ms)',
+       'Link error (ENOENT): file:test/link10 (00ms)',
+       'Link error (ENOENT): file:test/link11 (00ms)',
+       'Link error (ENOENT): file:test/link12 (00ms)',
+       'Link error (ENOENT): file:test/link13 (00ms)'],
+       '12 issues. (Set options.summary for a summary.)'));
+  },
+
+  localContentCheckLinksProtocol: function(test) {
+    test.expect(13);
+    runTest({
+        pageUrls: [
+          'test/fileLinks.html',
+          'file:test/fileLinks.html'
+        ],
+        checkLinks: true
+      },
+    testOutput(test,
+      ['Page: file:test/fileLinks.html (00ms)',
+       'Link: file:test/validPage.html (00ms)',
+       'Link: file:test/dir/relativePage.html (00ms)',
+       'Visited link: file:test/validPage.html',
+       'Visited link: file:test/dir/relativePage.html',
+       'Page: file:test/fileLinks.html (00ms)',
+       'Visited link: file:test/validPage.html',
+       'Visited link: file:test/dir/relativePage.html',
+       'Visited link: file:test/validPage.html',
+       'Visited link: file:test/dir/relativePage.html'],
+      []));
+  },
+
+  localContentOnlySameDomain: function(test) {
+    test.expect(4);
+    runTest({
+      pageUrls: ['test/externalLink.html'],
+      checkLinks: true,
+      onlySameDomain: true
+    },
+    testOutput(test,
+      ['Page: file:test/externalLink.html (00ms)'],
+      []));
+  },
+
+  localContentNoLocalLinks: function(test) {
+    test.expect(16);
+    nock('http://localhost').head('/').reply(200);
+    nock('http://example.com').head('/').reply(200);
+    nock('http://127.0.0.1').head('/').reply(200);
+    nock('http://169.254.1.1').head('/').reply(200);
+    nock('http://localhost').head('/').reply(200);
+    runTest({
+      pageUrls: ['test/localLinks.html'],
+      checkLinks: true,
+      noLocalLinks: true
+    },
+    testOutput(test,
+      ['Page: file:test/localLinks.html (00ms)',
+       'Link: http://localhost/ (00ms)',
+       'Link: http://example.com/ (00ms)',
+       'Link: http://127.0.0.1/ (00ms)',
+       'Link: http://169.254.1.1/ (00ms)',
+       'Link: http://[::1]/ (00ms)'],
+      ['Local link: http://localhost/',
+       'Local link: http://127.0.0.1/',
+       'Local link: http://[::1]/',
+       'Link error (Nock: Not allow net connect for "ff02:80/"): http://[ff02::1]/ (00ms)',
+       'Local link: http://[0000:0000:0000:0000:0000:0000:0000:0001]/',
+       'Link error (Nock: Not allow net connect for "0000:80/"): http://[0000:0000:0000:0000:0000:0000:0000:0001]/ (00ms)'],
+       '6 issues. (Set options.summary for a summary.)'));
+  },
+
+  localContentNoEmptyFragments: function(test) {
+    test.expect(13);
+    runTest({
+      pageUrls: ['file:test/fragmentIdentifier.html'],
+      checkLinks: true,
+      noEmptyFragments: true
+    },
+    testOutput(test,
+      ['Page: file:test/fragmentIdentifier.html (00ms)',
+       'Link: file:test/fragmentIdentifier.html# (00ms)',
+       'Visited link: file:test/fragmentIdentifier.html#fragment',
+       'Link: file:test/fragmentIdentifier.html?name=value#fragment (00ms)',
+       'Visited link: file:test/link#'],
+      ['Empty fragment: file:test/fragmentIdentifier.html#',
+       'Link error (ENOENT): file:test/link#fragment (00ms)',
+       'Empty fragment: file:test/link#',
+       'Link error (ENOENT): file:test/link?name=value#fragment (00ms)'],
+       '4 issues. (Set options.summary for a summary.)'));
+  },
+
+  localContentQueryHashesLinksToIgnore: function(test) {
+    test.expect(32);
+    runTest({
+      pageUrls: ['test/queryHashes.html'],
+      checkLinks: true,
+      queryHashes: true,
+      linksToIgnore: [
+        'file:test/noBytes.txt?crc32=00000000',
+        'file:test/compressed?crc32=3477f8a8'
+      ]
+    },
+    testOutput(test,
+      ['Page: file:test/queryHashes.html (00ms)',
+       'Link: file:test/brokenLinks.html?md5=abcd (00ms)',
+       'Link: file:test/externalLink.html?md5=9357B8FD6A13B3D1A6DBC00E6445E4FF (00ms)',
+       'Hash: file:test/externalLink.html?md5=9357B8FD6A13B3D1A6DBC00E6445E4FF',
+       'Link: file:test/ignoreLinks.html?md5=4f47458e34bc855a46349c1335f58cc3 (00ms)',
+       'Hash: file:test/ignoreLinks.html?md5=4f47458e34bc855a46349c1335f58cc3',
+       'Link: file:test/invalidEntity.html?field1=value&md5=fa3e4d3dc439fdb42d86855e516a92aa&field2=value (00ms)',
+       'Hash: file:test/invalidEntity.html?field1=value&md5=fa3e4d3dc439fdb42d86855e516a92aa&field2=value',
+       'Link: file:test/localLinks.html?crc32=abcd (00ms)',
+       'Link: file:test/multipleErrors.html?crc32=F88F0D21 (00ms)',
+       'Hash: file:test/multipleErrors.html?crc32=F88F0D21',
+       'Link: file:test/redirectLink.html?crc32=4363890c (00ms)',
+       'Hash: file:test/redirectLink.html?crc32=4363890c',
+       'Link: file:test/retryWhenHeadFails.html?sha1=abcd (00ms)',
+       'Link: file:test/unclosedElement.html?sha1=1D9E557D3B99507E8582E67F235D3DE6DFA3717A (00ms)',
+       'Hash: file:test/unclosedElement.html?sha1=1D9E557D3B99507E8582E67F235D3DE6DFA3717A',
+       'Link: file:test/unclosedImg.html?sha1=9511fa1a787d021bdf3aa9538029a44209fb5c4c (00ms)',
+       'Hash: file:test/unclosedImg.html?sha1=9511fa1a787d021bdf3aa9538029a44209fb5c4c',
+       'Link: file:test/validPage.html?field1=value&sha1=8ac1573c31b4f6132834523ac08de21c54138236&md5=abcd&crc32=abcd&field2=value (00ms)',
+       'Hash: file:test/validPage.html?field1=value&sha1=8ac1573c31b4f6132834523ac08de21c54138236&md5=abcd&crc32=abcd&field2=value',
+       'Link: file:test/allBytes.txt?sha1=88d103ba1b5db29a2d83b92d09a725cb6d2673f9 (00ms)',
+       'Hash: file:test/allBytes.txt?sha1=88d103ba1b5db29a2d83b92d09a725cb6d2673f9',
+       'Link: file:test/image.png?md5=e3ece6e91045f18ce18ac25455524cd0 (00ms)',
+       'Hash: file:test/image.png?md5=e3ece6e91045f18ce18ac25455524cd0',
+       'Link: file:test/image.png?key=value (00ms)'],
+      ['Hash error (7f5a1ac1e6dc59679f36482973efc871): file:test/brokenLinks.html?md5=abcd',
+       'Hash error (73fb7b7a): file:test/localLinks.html?crc32=abcd',
+       'Hash error (1353361bfade29f3684fe17c8b388dadbc49cb6d): file:test/retryWhenHeadFails.html?sha1=abcd'],
+       '3 issues. (Set options.summary for a summary.)'));
+  },
+
+  localContentInvalidProtocol: function(test) {
+    test.expect(4);
+    runTest({
+      pageUrls: ['test/invalidProtocol.html'],
+      checkLinks: true
+    },
+    testOutput(test,
+      ['Page: file:test/invalidProtocol.html (00ms)'],
+      []));
+  },
+
+  localContentCheckXhtml: function(test) {
+    test.expect(14);
+    runTest({
+        pageUrls: [
+          'test/validPage.html',
+          'test/unclosedElement.html',
+          'test/unclosedImg.html',
+          'test/invalidEntity.html',
+          'test/multipleErrors.html'
+        ],
+        checkXhtml: true
+      },
+    testOutput(test,
+      ['Page: file:test/validPage.html (00ms)',
+       'Page: file:test/unclosedElement.html (00ms)',
+       'Page: file:test/unclosedImg.html (00ms)',
+       'Page: file:test/invalidEntity.html (00ms)',
+       'Page: file:test/multipleErrors.html (00ms)'],
+      ['Unexpected close tag, Line: 5, Column: 7, Char: >',
+       'Unexpected close tag, Line: 4, Column: 7, Char: >',
+       'Invalid character entity, Line: 3, Column: 21, Char: ;',
+       'Invalid character entity, Line: 4, Column: 23, Char: ;',
+       'Unexpected close tag, Line: 5, Column: 6, Char: >'],
+       '5 issues. (Set options.summary for a summary.)'));
+  },
+
+  localContentCheckCaching: function(test) {
+    test.expect(7);
+    runTest({
+        pageUrls: ['test/validPage.html'],
+        checkCaching: true
+      },
+    testOutput(test,
+      ['Page: file:test/validPage.html (00ms)'],
+      ['Missing Cache-Control header in response',
+       'Missing ETag header in response'],
+       '2 issues. (Set options.summary for a summary.)'));
+  },
+
+  localContentCheckCompression: function(test) {
+    test.expect(6);
+    runTest({
+        pageUrls: ['test/validPage.html'],
+        checkCompression: true
+      },
+    testOutput(test,
+      ['Page: file:test/validPage.html (00ms)'],
+      ['Missing Content-Encoding header in response'],
+       '1 issue. (Set options.summary for a summary.)'));
+  },
+
+  localContentMaxResponseTime: function(test) {
+    test.expect(4);
+    runTest({
+        pageUrls: ['test/validPage.html'],
+        maxResponseTime: 100
+      },
+    testOutput(test,
+      ['Page: file:test/validPage.html (00ms)'],
+      []));
   }
 };

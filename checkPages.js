@@ -22,6 +22,7 @@ module.exports = function(host, options, done) {
   var crchash = require('crc-hash');
   var crypto = require('crypto');
   var request = require('request');
+  var requestFile = require('./requestFile.js');
   var sax = require('sax');
   var url = require('url');
 
@@ -30,6 +31,16 @@ module.exports = function(host, options, done) {
   var pendingCallbacks = [];
   var issues = [];
   var testedLinks = [];
+
+  // Returns a request object suitable for the specified URI
+  function requestFor(uri) {
+    if (url.parse(uri).protocol === 'file:') {
+      // Custom request implementation for files
+      return requestFile;
+    }
+    // Standard request implementation
+    return request;
+  }
 
   // Logs an error for a page
   function logPageError(page, message) {
@@ -83,7 +94,7 @@ module.exports = function(host, options, done) {
       }
       var res;
       var useGetRequest = retryWithGet || options.queryHashes;
-      var req = request(link, {
+      var req = requestFor(link)(link, {
         method: useGetRequest ? 'GET' : 'HEAD',
         followRedirect: !options.noRedirects
       })
@@ -144,7 +155,7 @@ module.exports = function(host, options, done) {
       if (link) {
         var resolvedLink = url.resolve(page, link);
         var parsedLink = url.parse(resolvedLink);
-        if (((parsedLink.protocol === 'http:') || (parsedLink.protocol === 'https:')) &&
+        if (((parsedLink.protocol === 'http:') || (parsedLink.protocol === 'https:') || (parsedLink.protocol === 'file:')) &&
             (!options.onlySameDomain || (parsedLink.hostname === pageHostname)) &&
             !isLinkIgnored(resolvedLink)) {
           // Add to beginning of queue (in order) so links gets processed before the next page
@@ -161,7 +172,7 @@ module.exports = function(host, options, done) {
     return function(callback) {
       var logError = logPageError.bind(null, page);
       var start = Date.now();
-      request.get(page, function(err, res, body) {
+      requestFor(page).get(page, function(err, res, body) {
         var elapsed = Date.now() - start;
         if (err) {
           logError('Page error (' + err.message + '): ' + page + ' (' + elapsed + 'ms)');
@@ -251,13 +262,20 @@ module.exports = function(host, options, done) {
     throw new Error('done is missing or invalid; it should be a function');
   }
 
-  // Check for required options
+  // Check for and normalize required options
   if (!options || (typeof (options) !== 'object')) {
     throw new Error('options parameter is missing or invalid; it should be an object');
   }
   if (!options.pageUrls || !Array.isArray(options.pageUrls)) {
     throw new Error('pageUrls option is missing or invalid; it should be an array of URLs');
   }
+  options.pageUrls = options.pageUrls.map(function(pageUrl) {
+    var parsed = url.parse(pageUrl);
+    if (!parsed.protocol) {
+      return 'file:' + pageUrl;
+    }
+    return pageUrl;
+  });
 
   // Check for and normalize optional options
   options.checkLinks = !!options.checkLinks;
