@@ -134,6 +134,7 @@ Specifies the task configuration.
 #### pageUrls
 
 Type: `Array` of `String`  
+Default value: `undefined`  
 *Required*
 
 `pageUrls` specifies a list of URLs for web pages the task will check. The list can be empty, but must be present.
@@ -296,16 +297,17 @@ This makes it easy to pick out failures when running tests against many pages.
 
 * 0.7.0 - Initial release, extract functionality from `grunt-check-pages` for use with Gulp.
 * 0.7.1 - Fix misreporting of "Bad link" for redirected links when noRedirects enabled.
-* 0.8.0 - Suppress redundant link checks, support "noEmptyFragments" option, update dependencies.
+* 0.8.0 - Suppress redundant link checks, support `noEmptyFragments` option, update dependencies.
+* 0.9.0 - Add support for checking local content via the 'file:' protocol, update dependencies.
 
 
 [npm-image]: https://img.shields.io/npm/v/check-pages.svg
 [npm-url]: https://www.npmjs.com/package/check-pages
 [github-tag-image]: https://img.shields.io/github/tag/DavidAnson/check-pages.svg
 [github-tag-url]: https://github.com/DavidAnson/check-pages
-[travis-image]: https://img.shields.io/travis/DavidAnson/check-pages.svg
+[travis-image]: https://img.shields.io/travis/DavidAnson/check-pages/master.svg
 [travis-url]: https://travis-ci.org/DavidAnson/check-pages
-[coveralls-image]: https://img.shields.io/coveralls/DavidAnson/check-pages.svg
+[coveralls-image]: https://img.shields.io/coveralls/DavidAnson/check-pages/master.svg
 [coveralls-url]: https://coveralls.io/r/DavidAnson/check-pages
 [license-image]: https://img.shields.io/npm/l/check-pages.svg
 [license-url]: http://opensource.org/licenses/MIT
