@@ -50,7 +50,7 @@ function runTest(options, callback) {
 function testOutput(test, log, error, exception) {
   return function(err, context, count) {
     if (err || exception) {
-      test.equal(err.message, exception, 'Wrong exception text');
+      test.equal(err && err.message, exception, 'Wrong exception text');
     }
     if (context) {
       test.equal(context.log.length, log.length, 'Wrong log count');
