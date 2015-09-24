@@ -1463,5 +1463,27 @@ exports.checkPages = {
     testOutput(test,
       ['Page: file:test/validPage.html (00ms)'],
       []));
+  },
+
+  nonAscii: function(test) {
+    test.expect(7);
+    nock('http://example.com')
+      .head(encodeURI('/first/☺')).reply(200)
+      .get(encodeURI('/first/☺')).reply(200)
+      .head(encodeURI('/second/☺')).reply(200)
+      .get(encodeURI('/second/☺')).reply(200)
+      .head(encodeURI('/third/☺ ☺')).reply(200)
+      .get(encodeURI('/third/☺ ☺')).reply(200);
+    runTest({
+      pageUrls: ['test/nonAscii.html'],
+      checkLinks: true
+    },
+    testOutput(test,
+      ['Page: file:test/nonAscii.html (00ms)',
+       'Link: http://example.com/first/☺ (00ms)',
+       'Link: http://example.com/second/%E2%98%BA (00ms)',
+       'Link: http://example.com/third/☺%20☺ (00ms)'],
+      []
+    ));
   }
 };
