@@ -564,9 +564,9 @@ exports.checkPages = {
     nock('http://example.com').head('/').reply(200);
     nock('http://127.0.0.1').head('/').reply(200);
     nock('http://169.254.1.1').head('/').reply(200);
-    nock('http://localhost').head('/').reply(200); // [::1]
-    // nock('http://[ff02::1]').head('/').reply(200); // IPV6 unsupported by nock?
-    // nock('http://[0000:0000:0000:0000:0000:0000:0000:0001]').head('/').reply(200);
+    nock('http://[::1]:80').head('/').reply(200);
+    nock('http://[ff02::1]:80').head('/').reply(200);
+    nock('http://[0000:0000:0000:0000:0000:0000:0000:0001]:80').head('/').reply(200);
     runTest({
       pageUrls: ['http://example.com/localLinks.html'],
       checkLinks: true,
@@ -578,16 +578,14 @@ exports.checkPages = {
        'Link: http://example.com/ (00ms)',
        'Link: http://127.0.0.1/ (00ms)',
        'Link: http://169.254.1.1/ (00ms)',
-       'Link: http://[::1]/ (00ms)'],
-       // 'Link: http://[ff02::1]/ (00ms)',
-       // 'Link: http://[0000:0000:0000:0000:0000:0000:0000:0001]/ (00ms)',
+       'Link: http://[::1]/ (00ms)',
+       'Link: http://[ff02::1]/ (00ms)',
+       'Link: http://[0000:0000:0000:0000:0000:0000:0000:0001]/ (00ms)'],
       ['Local link: http://localhost/',
        'Local link: http://127.0.0.1/',
        'Local link: http://[::1]/',
-       'Link error (Nock: Not allow net connect for "ff02:80/"): http://[ff02::1]/ (00ms)',
-       'Local link: http://[0000:0000:0000:0000:0000:0000:0000:0001]/',
-       'Link error (Nock: Not allow net connect for "0000:80/"): http://[0000:0000:0000:0000:0000:0000:0000:0001]/ (00ms)'],
-       '6 issues. (Set options.summary for a summary.)'));
+       'Local link: http://[0000:0000:0000:0000:0000:0000:0000:0001]/'],
+       '4 issues. (Set options.summary for a summary.)'));
   },
 
   checkLinksNoEmptyFragments: function(test) {
@@ -1307,6 +1305,9 @@ exports.checkPages = {
     nock('http://127.0.0.1').head('/').reply(200);
     nock('http://169.254.1.1').head('/').reply(200);
     nock('http://localhost').head('/').reply(200);
+    nock('http://[::1]:80').head('/').reply(200);
+    nock('http://[ff02::1]:80').head('/').reply(200);
+    nock('http://[0000:0000:0000:0000:0000:0000:0000:0001]:80').head('/').reply(200);
     runTest({
       pageUrls: ['test/localLinks.html'],
       checkLinks: true,
@@ -1318,14 +1319,14 @@ exports.checkPages = {
        'Link: http://example.com/ (00ms)',
        'Link: http://127.0.0.1/ (00ms)',
        'Link: http://169.254.1.1/ (00ms)',
-       'Link: http://[::1]/ (00ms)'],
+       'Link: http://[::1]/ (00ms)',
+       'Link: http://[ff02::1]/ (00ms)',
+       'Link: http://[0000:0000:0000:0000:0000:0000:0000:0001]/ (00ms)'],
       ['Local link: http://localhost/',
        'Local link: http://127.0.0.1/',
        'Local link: http://[::1]/',
-       'Link error (Nock: Not allow net connect for "ff02:80/"): http://[ff02::1]/ (00ms)',
-       'Local link: http://[0000:0000:0000:0000:0000:0000:0000:0001]/',
-       'Link error (Nock: Not allow net connect for "0000:80/"): http://[0000:0000:0000:0000:0000:0000:0000:0001]/ (00ms)'],
-       '6 issues. (Set options.summary for a summary.)'));
+       'Local link: http://[0000:0000:0000:0000:0000:0000:0000:0001]/'],
+       '4 issues. (Set options.summary for a summary.)'));
   },
 
   localContentNoEmptyFragments: function(test) {
