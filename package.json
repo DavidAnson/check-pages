@@ -29,7 +29,7 @@
     "sax": "^1.1.1"
   },
   "devDependencies": {
-    "eslint": "^0.22.1",
+    "eslint": "^2.7.0",
     "istanbul": "^0.3.14",
     "nock": "^8.0.0",
     "nodeunit": "^0.9.1"

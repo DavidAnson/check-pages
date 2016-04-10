@@ -1208,11 +1208,11 @@ exports.checkPages = {
   localContentPageUrls: function(test) {
     test.expect(5);
     runTest({
-        pageUrls: [
-          'test/validPage.html',
-          'file:test/validPage.html'
-        ]
-      },
+      pageUrls: [
+        'test/validPage.html',
+        'file:test/validPage.html'
+      ]
+    },
     testOutput(test,
       ['Page: file:test/validPage.html (00ms)',
        'Page: file:test/validPage.html (00ms)'],
@@ -1237,11 +1237,11 @@ exports.checkPages = {
     nockRedirect('movedPermanently', 301);
     nockRedirect('movedTemporarily', 302);
     runTest({
-        pageUrls: [
-          'test/validPage.html'
-        ],
-        checkLinks: true
-      },
+      pageUrls: [
+        'test/validPage.html'
+      ],
+      checkLinks: true
+    },
     testOutput(test,
       ['Page: file:test/validPage.html (00ms)',
        'Link: http://example.com/link1 (00ms)',
@@ -1266,12 +1266,12 @@ exports.checkPages = {
   localContentCheckLinksProtocol: function(test) {
     test.expect(13);
     runTest({
-        pageUrls: [
-          'test/fileLinks.html',
-          'file:test/fileLinks.html'
-        ],
-        checkLinks: true
-      },
+      pageUrls: [
+        'test/fileLinks.html',
+        'file:test/fileLinks.html'
+      ],
+      checkLinks: true
+    },
     testOutput(test,
       ['Page: file:test/fileLinks.html (00ms)',
        'Link: file:test/validPage.html (00ms)',
@@ -1406,15 +1406,15 @@ exports.checkPages = {
   localContentCheckXhtml: function(test) {
     test.expect(14);
     runTest({
-        pageUrls: [
-          'test/validPage.html',
-          'test/unclosedElement.html',
-          'test/unclosedImg.html',
-          'test/invalidEntity.html',
-          'test/multipleErrors.html'
-        ],
-        checkXhtml: true
-      },
+      pageUrls: [
+        'test/validPage.html',
+        'test/unclosedElement.html',
+        'test/unclosedImg.html',
+        'test/invalidEntity.html',
+        'test/multipleErrors.html'
+      ],
+      checkXhtml: true
+    },
     testOutput(test,
       ['Page: file:test/validPage.html (00ms)',
        'Page: file:test/unclosedElement.html (00ms)',
@@ -1432,9 +1432,9 @@ exports.checkPages = {
   localContentCheckCaching: function(test) {
     test.expect(7);
     runTest({
-        pageUrls: ['test/validPage.html'],
-        checkCaching: true
-      },
+      pageUrls: ['test/validPage.html'],
+      checkCaching: true
+    },
     testOutput(test,
       ['Page: file:test/validPage.html (00ms)'],
       ['Missing Cache-Control header in response',
@@ -1445,9 +1445,9 @@ exports.checkPages = {
   localContentCheckCompression: function(test) {
     test.expect(6);
     runTest({
-        pageUrls: ['test/validPage.html'],
-        checkCompression: true
-      },
+      pageUrls: ['test/validPage.html'],
+      checkCompression: true
+    },
     testOutput(test,
       ['Page: file:test/validPage.html (00ms)'],
       ['Missing Content-Encoding header in response'],
@@ -1457,9 +1457,9 @@ exports.checkPages = {
   localContentMaxResponseTime: function(test) {
     test.expect(4);
     runTest({
-        pageUrls: ['test/validPage.html'],
-        maxResponseTime: 100
-      },
+      pageUrls: ['test/validPage.html'],
+      maxResponseTime: 100
+    },
     testOutput(test,
       ['Page: file:test/validPage.html (00ms)'],
       []));

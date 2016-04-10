@@ -92,7 +92,7 @@ module.exports = function(host, options, done) {
           hash = crchash.createHash('crc32');
         }
       }
-      var res;
+      var res = null;
       var useGetRequest = retryWithGet || options.queryHashes;
       var req = requestFor(link)(link, {
         method: useGetRequest ? 'GET' : 'HEAD',
@@ -139,7 +139,7 @@ module.exports = function(host, options, done) {
         req.pipe(hash);
       }
       if (options.noLocalLinks) {
-        var localhost = /^(localhost)|(127\.\d\d?\d?\.\d\d?\d?\.\d\d?\d?)|(\[[0\:]*\:[0\:]*\:0?0?0?1\])$/i;
+        var localhost = /^(localhost)|(127\.\d\d?\d?\.\d\d?\d?\.\d\d?\d?)|(\[[0:]*:[0:]*:0?0?0?1\])$/i;
         if (localhost.test(req.uri.host)) {
           logError('Local link: ' + link);
         }
@@ -193,9 +193,9 @@ module.exports = function(host, options, done) {
             ['a href', 'area href', 'audio src', 'embed src', 'iframe src', 'img src',
               'input src', 'link href', 'object data', 'script src', 'source src',
               'track src', 'video src'].forEach(function(pair) {
-              var items = pair.split(' ');
-              index = addLinks($, items[0], items[1], page, index);
-            });
+                var items = pair.split(' ');
+                index = addLinks($, items[0], items[1], page, index);
+              });
           }
           if (options.checkXhtml) {
             // Check the page's structure for XHTML compliance
@@ -223,7 +223,7 @@ module.exports = function(host, options, done) {
             }
             var etag = res.headers.etag;
             if (etag) {
-              if (!/^(W\/)?\"[^\"]*\"$/.test(etag)) {
+              if (!/^(W\/)?"[^"]*"$/.test(etag)) {
                 logError('Invalid ETag header in response: ' + etag);
               }
             } else if (!cacheControl || !/no-cache|max-age=0/.test(cacheControl)) { // Don't require ETag for responses that won't be cached
@@ -328,12 +328,12 @@ module.exports = function(host, options, done) {
 
   // Queue 'done' callback
   pendingCallbacks.push(function() {
-    var err;
+    var err = null;
     var issueCount = issues.length;
     if (issueCount) {
       if (options.summary) {
         var summary = 'Summary of issues:\n';
-        var currentPage;
+        var currentPage = null;
         issues.forEach(function(issue) {
           var page = issue[0];
           var message = issue[1];
