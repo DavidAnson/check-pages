@@ -24,6 +24,7 @@ module.exports = function(host, options, done) {
   var request = require('request');
   var requestFile = require('./requestFile.js');
   var sax = require('sax');
+  var urijs = require('urijs');
   var url = require('url');
 
   // Global variables
@@ -55,34 +56,19 @@ module.exports = function(host, options, done) {
     });
   }
 
-  /* Converts http://examplé.com/rosé?rosé=1 to
-   * http://examplé.com/ros%C3%A9?ros%C3%A9=1 so that servers which expect
-   * ASCII only requests can handle it */
-  function fixNonAsciiLink(link) {
-    var parsed = url.parse(link);
-    if (/^[\u0000-\u007f]*$/.test(parsed.path)) {
-      return link;
+  // Normalizes a URI (to handle international characters and domains)
+  function normalizeUri(uri) {
+    var urlParse = url.parse(uri);
+    if (urlParse.protocol === 'file:') {
+      return uri;
     }
-    /* We need to decodeURI and then encodeURI, so that all non-ASCII
-      * characters get escaped, not just whitespace like %20 */
-    var pathname = parsed.pathname;
-    var query = parsed.query;
-    try {
-      pathname = decodeURI(pathname);
-    } catch (e) { /* do nothing */ }
-    try {
-      query = decodeURI(query);
-    } catch (e) { /* do nothing */ }
-    var rv = url.format({
-      protocol: parsed.protocol,
-      slashes: parsed.slashes,
-      host: parsed.host,
-      auth: parsed.auth,
-      pathname: encodeURI(pathname),
-      query: encodeURI(query),
-      hash: parsed.hash
-    });
-    return rv;
+    var urijsParse = urijs(uri).normalize();
+    var normalizedUri = urijsParse.toString();
+    if ((urlParse.hash === '#') && (urijsParse.hash() === '')) {
+      // Restore empty fragment removed by URI.js
+      normalizedUri += '#';
+    }
+    return normalizedUri;
   }
 
   // Returns a callback to test the specified link
@@ -124,7 +110,7 @@ module.exports = function(host, options, done) {
       }
       var res = null;
       var useGetRequest = retryWithGet || options.queryHashes;
-      var req = requestFor(link)(fixNonAsciiLink(link), {
+      var req = requestFor(link)(normalizeUri(link), {
         method: useGetRequest ? 'GET' : 'HEAD',
         followRedirect: !options.noRedirects
       })
@@ -202,7 +188,7 @@ module.exports = function(host, options, done) {
     return function(callback) {
       var logError = logPageError.bind(null, page);
       var start = Date.now();
-      requestFor(page).get(fixNonAsciiLink(page), function(err, res, body) {
+      requestFor(page).get(normalizeUri(page), function(err, res, body) {
         var elapsed = Date.now() - start;
         if (err) {
           logError('Page error (' + err.message + '): ' + page + ' (' + elapsed + 'ms)');
