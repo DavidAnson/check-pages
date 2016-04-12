@@ -5,6 +5,8 @@ var domain = require('domain');
 var path = require('path');
 var zlib = require('zlib');
 var nock = require('nock');
+var lodashClone = require('lodash.clone');
+var lodashIsEqual = require('lodash.isequal');
 var checkPages = require('../checkPages.js');
 var requestFile = require('../requestFile.js');
 
@@ -18,6 +20,8 @@ function noop() {}
 
 // Run a test
 function runTest(options, callback) {
+  var optionsClone = lodashClone(options);
+
   // Test context
   var context = {
     options: options,
@@ -40,6 +44,9 @@ function runTest(options, callback) {
     // Use nextTick to include synchronous exceptions in the domain
     process.nextTick(function() {
       checkPages(host, context.options, function(err, count) {
+        if (!lodashIsEqual(context.options, optionsClone)) {
+          err = new Error('Options object was modified.');
+        }
         callback(err, context, count);
       });
     });

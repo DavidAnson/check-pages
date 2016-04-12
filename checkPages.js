@@ -33,6 +33,19 @@ module.exports = function(host, options, done) {
   var issues = [];
   var testedLinks = [];
 
+  // Applies key/value pairs from src to dst, returning dst
+  function assign(dst, src) {
+    Object.keys(src).forEach(function forKey(key) {
+      dst[key] = src[key];
+    });
+    return dst;
+  }
+
+  // Clones the key/value pairs of obj, returning the clone
+  function clone(obj) {
+    return assign({}, obj);
+  }
+
   // Returns a request object suitable for the specified URI
   function requestFor(uri) {
     if (url.parse(uri).protocol === 'file:') {
@@ -282,6 +295,7 @@ module.exports = function(host, options, done) {
   if (!options || (typeof (options) !== 'object')) {
     throw new Error('options parameter is missing or invalid; it should be an object');
   }
+  options = clone(options);
   if (!options.pageUrls || !Array.isArray(options.pageUrls)) {
     throw new Error('pageUrls option is missing or invalid; it should be an array of URLs');
   }

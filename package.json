@@ -32,6 +32,8 @@
   "devDependencies": {
     "eslint": "^2.7.0",
     "istanbul": "^0.4.3",
+    "lodash.clone": "^4.3.2",
+    "lodash.isequal": "^4.1.4",
     "nock": "^8.0.0",
     "nodeunit": "^0.9.1"
   },
