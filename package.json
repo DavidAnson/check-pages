@@ -26,7 +26,8 @@
     "cheerio": "^0.20.0",
     "crc-hash": "^0.2.2",
     "request": "^2.70.0",
-    "sax": "^1.2.1"
+    "sax": "^1.2.1",
+    "urijs": "^1.17.1"
   },
   "devDependencies": {
     "eslint": "^2.7.0",

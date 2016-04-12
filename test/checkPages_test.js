@@ -566,7 +566,7 @@ exports.checkPages = {
     nock('http://169.254.1.1').head('/').reply(200);
     nock('http://[::1]:80').head('/').reply(200);
     nock('http://[ff02::1]:80').head('/').reply(200);
-    nock('http://[0000:0000:0000:0000:0000:0000:0000:0001]:80').head('/').reply(200);
+    nock('http://[::1]:80').head('/').reply(200);
     runTest({
       pageUrls: ['http://example.com/localLinks.html'],
       checkLinks: true,
@@ -745,6 +745,33 @@ exports.checkPages = {
        'Visited link: http://example.com/movedPermanently',
        'Visited link: http://example.com/movedTemporarily'],
       []));
+  },
+
+  checkLinksNonAscii: function(test) {
+    test.expect(8);
+    nockFiles(['nonAscii.html']);
+    nock('http://example.com')
+      .head(encodeURI('/first/☺')).reply(200)
+      .get(encodeURI('/first/☺')).reply(200)
+      .head(encodeURI('/second/☺')).reply(200)
+      .get(encodeURI('/second/☺')).reply(200)
+      .head(encodeURI('/third/☺ ☺')).reply(200)
+      .get(encodeURI('/third/☺ ☺')).reply(200);
+    nock('http://xn--exampl-gva.com')
+      .head(encodeURI('/rosé')).reply(200)
+      .get(encodeURI('/rosé')).reply(200);
+    runTest({
+      pageUrls: ['http://example.com/nonAscii.html'],
+      checkLinks: true
+    },
+    testOutput(test,
+      ['Page: http://example.com/nonAscii.html (00ms)',
+       'Link: http://example.com/first/☺ (00ms)',
+       'Link: http://example.com/second/%E2%98%BA (00ms)',
+       'Link: http://example.com/third/☺%20☺ (00ms)',
+       'Link: http://xn--exampl-gva.com/rosé (00ms)'],
+      []
+    ));
   },
 
   // checkXhtml functionality
@@ -1307,7 +1334,7 @@ exports.checkPages = {
     nock('http://localhost').head('/').reply(200);
     nock('http://[::1]:80').head('/').reply(200);
     nock('http://[ff02::1]:80').head('/').reply(200);
-    nock('http://[0000:0000:0000:0000:0000:0000:0000:0001]:80').head('/').reply(200);
+    nock('http://[::1]:80').head('/').reply(200);
     runTest({
       pageUrls: ['test/localLinks.html'],
       checkLinks: true,
