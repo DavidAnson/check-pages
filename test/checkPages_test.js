@@ -327,12 +327,14 @@ exports.checkPages = {
   // checkLinks functionality
 
   checkLinksValid: function(test) {
-    test.expect(20);
+    test.expect(31);
     nockFiles(['validPage.html']);
     nockLinks([
       'link0', 'link1', 'link3', 'link4', 'link5',
       'link6', 'link7', 'link8', 'link9', 'link10',
-      'link11', 'link12', 'link13']);
+      'link11', 'link12', 'link13', 'link14', 'link15',
+      'link16', 'link17', 'link18', 'link19', 'link20',
+      'link21', 'link22', 'link23', 'link24']);
     nockRedirect('movedPermanently', 301);
     nockRedirect('movedTemporarily', 302);
     nockLinks(['link2'], 'http://example.org');
@@ -351,13 +353,24 @@ exports.checkPages = {
        'Link: http://example.com/link5 (00ms)',
        'Link: http://example.com/link6 (00ms)',
        'Link: http://example.com/link7 (00ms)',
+       'Link: http://example.com/link11 (00ms)',
        'Link: http://example.com/link8 (00ms)',
-       'Link: http://example.com/link0 (00ms)',
        'Link: http://example.com/link9 (00ms)',
        'Link: http://example.com/link10 (00ms)',
-       'Link: http://example.com/link11 (00ms)',
        'Link: http://example.com/link12 (00ms)',
-       'Link: http://example.com/link13 (00ms)'],
+       'Link: http://example.com/link13 (00ms)',
+       'Link: http://example.com/link14 (00ms)',
+       'Link: http://example.com/link15 (00ms)',
+       'Link: http://example.com/link0 (00ms)',
+       'Link: http://example.com/link16 (00ms)',
+       'Link: http://example.com/link17 (00ms)',
+       'Link: http://example.com/link18 (00ms)',
+       'Link: http://example.com/link19 (00ms)',
+       'Link: http://example.com/link20 (00ms)',
+       'Link: http://example.com/link21 (00ms)',
+       'Link: http://example.com/link22 (00ms)',
+       'Link: http://example.com/link23 (00ms)',
+       'Link: http://example.com/link24 (00ms)'],
       []));
   },
 
@@ -640,7 +653,7 @@ exports.checkPages = {
           'retryWhenHeadFails.html?sha1=abcd',
           'unclosedElement.html?sha1=1D9E557D3B99507E8582E67F235D3DE6DFA3717A',
           'unclosedImg.html?sha1=9511fa1a787d021bdf3aa9538029a44209fb5c4c',
-          'validPage.html?field1=value&sha1=8ac1573c31b4f6132834523ac08de21c54138236&md5=abcd&crc32=abcd&field2=value']);
+          'validPage.html?field1=value&sha1=C6353F4041B4C19831D1CDA897C3C3E8CE78DCB3&md5=abcd&crc32=abcd&field2=value']);
         nock('http://example.com').get('/noBytes.txt?crc32=00000000').reply(200, '', { 'Content-Type': 'application/octet-stream' });
         nockFiles(['allBytes.txt?sha1=88d103ba1b5db29a2d83b92d09a725cb6d2673f9'], null, { 'Content-Type': 'application/octet-stream' });
         nockFiles(['image.png?md5=e3ece6e91045f18ce18ac25455524cd0'], null, { 'Content-Type': 'image/png' });
@@ -669,8 +682,8 @@ exports.checkPages = {
            'Hash: http://example.com/unclosedElement.html?sha1=1D9E557D3B99507E8582E67F235D3DE6DFA3717A',
            'Link: http://example.com/unclosedImg.html?sha1=9511fa1a787d021bdf3aa9538029a44209fb5c4c (00ms)',
            'Hash: http://example.com/unclosedImg.html?sha1=9511fa1a787d021bdf3aa9538029a44209fb5c4c',
-           'Link: http://example.com/validPage.html?field1=value&sha1=8ac1573c31b4f6132834523ac08de21c54138236&md5=abcd&crc32=abcd&field2=value (00ms)',
-           'Hash: http://example.com/validPage.html?field1=value&sha1=8ac1573c31b4f6132834523ac08de21c54138236&md5=abcd&crc32=abcd&field2=value',
+           'Link: http://example.com/validPage.html?field1=value&sha1=C6353F4041B4C19831D1CDA897C3C3E8CE78DCB3&md5=abcd&crc32=abcd&field2=value (00ms)',
+           'Hash: http://example.com/validPage.html?field1=value&sha1=C6353F4041B4C19831D1CDA897C3C3E8CE78DCB3&md5=abcd&crc32=abcd&field2=value',
            'Link: http://example.com/noBytes.txt?crc32=00000000 (00ms)',
            'Hash: http://example.com/noBytes.txt?crc32=00000000',
            'Link: http://example.com/allBytes.txt?sha1=88d103ba1b5db29a2d83b92d09a725cb6d2673f9 (00ms)',
@@ -1265,7 +1278,7 @@ exports.checkPages = {
   },
 
   localContentCheckLinks: function(test) {
-    test.expect(21);
+    test.expect(32);
     nockLinks(['link1'], 'http://example.com');
     nockLinks(['link2'], 'http://example.org');
     nockRedirect('movedPermanently', 301);
@@ -1287,14 +1300,25 @@ exports.checkPages = {
        'Link error (ENOENT): file:test/link5 (00ms)',
        'Link error (ENOENT): file:test/link6 (00ms)',
        'Link error (ENOENT): file:test/link7 (00ms)',
+       'Link error (ENOENT): file:test/link11 (00ms)',
        'Link error (ENOENT): file:test/link8 (00ms)',
-       'Link error (ENOENT): file:test/link0 (00ms)',
        'Link error (ENOENT): file:test/link9 (00ms)',
        'Link error (ENOENT): file:test/link10 (00ms)',
-       'Link error (ENOENT): file:test/link11 (00ms)',
        'Link error (ENOENT): file:test/link12 (00ms)',
-       'Link error (ENOENT): file:test/link13 (00ms)'],
-       '12 issues. (Set options.summary for a summary.)'));
+       'Link error (ENOENT): file:test/link13 (00ms)',
+       'Link error (ENOENT): file:test/link14 (00ms)',
+       'Link error (ENOENT): file:test/link15 (00ms)',
+       'Link error (ENOENT): file:test/link0 (00ms)',
+       'Link error (ENOENT): file:test/link16 (00ms)',
+       'Link error (ENOENT): file:test/link17 (00ms)',
+       'Link error (ENOENT): file:test/link18 (00ms)',
+       'Link error (ENOENT): file:test/link19 (00ms)',
+       'Link error (ENOENT): file:test/link20 (00ms)',
+       'Link error (ENOENT): file:test/link21 (00ms)',
+       'Link error (ENOENT): file:test/link22 (00ms)',
+       'Link error (ENOENT): file:test/link23 (00ms)',
+       'Link error (ENOENT): file:test/link24 (00ms)'],
+       '23 issues. (Set options.summary for a summary.)'));
   },
 
   localContentCheckLinksProtocol: function(test) {
@@ -1413,8 +1437,8 @@ exports.checkPages = {
        'Hash: file:test/unclosedElement.html?sha1=1D9E557D3B99507E8582E67F235D3DE6DFA3717A',
        'Link: file:test/unclosedImg.html?sha1=9511fa1a787d021bdf3aa9538029a44209fb5c4c (00ms)',
        'Hash: file:test/unclosedImg.html?sha1=9511fa1a787d021bdf3aa9538029a44209fb5c4c',
-       'Link: file:test/validPage.html?field1=value&sha1=8ac1573c31b4f6132834523ac08de21c54138236&md5=abcd&crc32=abcd&field2=value (00ms)',
-       'Hash: file:test/validPage.html?field1=value&sha1=8ac1573c31b4f6132834523ac08de21c54138236&md5=abcd&crc32=abcd&field2=value',
+       'Link: file:test/validPage.html?field1=value&sha1=C6353F4041B4C19831D1CDA897C3C3E8CE78DCB3&md5=abcd&crc32=abcd&field2=value (00ms)',
+       'Hash: file:test/validPage.html?field1=value&sha1=C6353F4041B4C19831D1CDA897C3C3E8CE78DCB3&md5=abcd&crc32=abcd&field2=value',
        'Link: file:test/allBytes.txt?sha1=88d103ba1b5db29a2d83b92d09a725cb6d2673f9 (00ms)',
        'Hash: file:test/allBytes.txt?sha1=88d103ba1b5db29a2d83b92d09a725cb6d2673f9',
        'Link: file:test/image.png?md5=e3ece6e91045f18ce18ac25455524cd0 (00ms)',

@@ -158,13 +158,16 @@ The following element/attribute pairs are used to identify links:
 * `embed`/`src`
 * `iframe`/`src`
 * `img`/`src`
+* `img`/`srcset`
 * `input`/`src`
 * `link`/`href`
 * `object`/`data`
 * `script`/`src`
 * `source`/`src`
+* `source`/`srcset`
 * `track`/`src`
 * `video`/`src`
+* `video`/`poster`
 
 #### onlySameDomain
 

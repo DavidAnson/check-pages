@@ -24,6 +24,7 @@ module.exports = function(host, options, done) {
   var request = require('request');
   var requestFile = require('./requestFile.js');
   var sax = require('sax');
+  var srcset = require('srcset');
   var urijs = require('urijs');
   var url = require('url');
 
@@ -180,17 +181,25 @@ module.exports = function(host, options, done) {
   function addLinks($, element, attribute, page, index) {
     var pageHostname = url.parse(page).hostname;
     $(element).each(function() {
-      var link = $(this).attr(attribute);
-      if (link) {
-        var resolvedLink = url.resolve(page, link);
-        var parsedLink = url.parse(resolvedLink);
-        if (((parsedLink.protocol === 'http:') || (parsedLink.protocol === 'https:') || (parsedLink.protocol === 'file:')) &&
-            (!options.onlySameDomain || (parsedLink.hostname === pageHostname)) &&
-            !isLinkIgnored(resolvedLink)) {
-          // Add to beginning of queue (in order) so links gets processed before the next page
-          pendingCallbacks.splice(index, 0, testLink(page, resolvedLink));
-          index++;
+      var value = $(this).attr(attribute);
+      if (value) {
+        var links = [value];
+        if (attribute === 'srcset') {
+          links = srcset.parse(value).map(function(size) {
+            return size.url;
+          });
         }
+        links.forEach(function(link) {
+          var resolvedLink = url.resolve(page, link);
+          var parsedLink = url.parse(resolvedLink);
+          if (((parsedLink.protocol === 'http:') || (parsedLink.protocol === 'https:') || (parsedLink.protocol === 'file:')) &&
+              (!options.onlySameDomain || (parsedLink.hostname === pageHostname)) &&
+              !isLinkIgnored(resolvedLink)) {
+            // Add to beginning of queue (in order) so links gets processed before the next page
+            pendingCallbacks.splice(index, 0, testLink(page, resolvedLink));
+            index++;
+          }
+        });
       }
     });
     return index;
@@ -220,8 +229,9 @@ module.exports = function(host, options, done) {
             var $ = cheerio.load(body);
             var index = 0;
             ['a href', 'area href', 'audio src', 'embed src', 'iframe src', 'img src',
-              'input src', 'link href', 'object data', 'script src', 'source src',
-              'track src', 'video src'].forEach(function(pair) {
+              'img srcset', 'input src', 'link href', 'object data', 'script src',
+              'source src', 'source srcset', 'track src', 'video src', 'video poster']
+              .forEach(function(pair) {
                 var items = pair.split(' ');
                 index = addLinks($, items[0], items[1], page, index);
               });
