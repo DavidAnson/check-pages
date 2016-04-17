@@ -28,7 +28,8 @@ By providing a list of pages to scan, the task can:
 
 * Validate each page is accessible
 * Validate all links point to accessible content (similar to the [W3C Link Checker](http://validator.w3.org/checklink))
-* Validate links with query string [file hashes](http://en.wikipedia.org/wiki/List_of_hash_functions) have the expected content
+* Validate links with query string [file hashes](https://en.wikipedia.org/wiki/List_of_hash_functions) have the expected content
+* Validate all links use the secure [HTTPS protocol](https://en.wikipedia.org/wiki/HTTPS) where possible
 * Validate page structure for XHTML compliance (akin to the [W3C Markup Validation Service](http://validator.w3.org/))
 * Validate a page's response time is below some threshold
 * Validate a page takes advantage of [caching for better performance](https://developers.google.com/speed/docs/insights/LeverageBrowserCaching)
@@ -146,7 +147,7 @@ URLs can point to local or remote content via the `http`, `https`, and `file` pr
 Type: `Boolean`  
 Default value: `false`
 
-Enabling `checkLinks` causes each link in a page to be checked for validity (i.e., an [HTTP HEAD or GET request](http://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol#Request_methods) returns success).
+Enabling `checkLinks` causes each link in a page to be checked for validity (i.e., an [HTTP HEAD or GET request](https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol#Request_methods) returns success).
 
 For efficiency, a `HEAD` request is made first and a successful result validates the link. Because some web servers misbehave, a failed `HEAD` request is followed by a `GET` request to definitively validate the link.
 
@@ -177,7 +178,7 @@ Used by: `checkLinks`
 
 Set this option to `true` to block the checking of links on different domains than the referring page.
 
-This can be useful during development when external sites aren't changing and don't need to be checked.
+This is useful during development when external sites aren't changing and don't need to be checked.
 
 #### queryHashes
 
@@ -185,15 +186,25 @@ Type: `Boolean`
 Default value: `false`  
 Used by: `checkLinks`
 
-Set this option to `true` to verify links with [file hashes](http://en.wikipedia.org/wiki/List_of_hash_functions) in the query string point to content that hashes to the expected value.
+Set this option to `true` to verify links with [file hashes](https://en.wikipedia.org/wiki/List_of_hash_functions) in the query string point to content that hashes to the expected value.
 
 Query hashes can be used to [invalidate cached responses](https://developers.google.com/web/fundamentals/performance/optimizing-content-efficiency/http-caching#invalidating-and-updating-cached-responses) when [leveraging browser caching](https://developers.google.com/speed/docs/insights/LeverageBrowserCaching) via long cache lifetimes.
 
 Supported hash functions are:
 
-* image.png?[crc32](http://en.wikipedia.org/wiki/Cyclic_redundancy_check)=e4f013b5
-* styles.css?[md5](http://en.wikipedia.org/wiki/MD5)=4f47458e34bc855a46349c1335f58cc3
-* archive.zip?[sha1](http://en.wikipedia.org/wiki/SHA-1)=9511fa1a787d021bdf3aa9538029a44209fb5c4c
+* image.png?[crc32](https://en.wikipedia.org/wiki/Cyclic_redundancy_check)=e4f013b5
+* styles.css?[md5](https://en.wikipedia.org/wiki/MD5)=4f47458e34bc855a46349c1335f58cc3
+* archive.zip?[sha1](https://en.wikipedia.org/wiki/SHA-1)=9511fa1a787d021bdf3aa9538029a44209fb5c4c
+
+#### preferSecure
+
+Type: `Boolean`  
+Default value: `false`  
+Used by: `checkLinks`
+
+Set this option to `true` to fail the task if any HTTP links are present where the corresponding HTTPS link is also valid.
+
+This is useful to ensure outgoing links use a secure protocol wherever possible.
 
 #### noRedirects
 
@@ -201,9 +212,9 @@ Type: `Boolean`
 Default value: `false`  
 Used by: `checkLinks`
 
-Set this option to `true` to fail the task if any [HTTP redirects](http://en.wikipedia.org/wiki/URL_redirection) are encountered.
+Set this option to `true` to fail the task if any [HTTP redirects](https://en.wikipedia.org/wiki/URL_redirection) are encountered.
 
-This can be useful to ensure outgoing links are to the content's canonical location.
+This is useful to ensure outgoing links are to the content's canonical location.
 
 #### noLocalLinks
 
@@ -211,7 +222,7 @@ Type: `Boolean`
 Default value: `false`  
 Used by: `checkLinks`
 
-Set this option to `true` to fail the task if any links to [`localhost`](http://en.wikipedia.org/wiki/Localhost) are encountered.
+Set this option to `true` to fail the task if any links to [`localhost`](https://en.wikipedia.org/wiki/Localhost) are encountered.
 
 This is useful to detect temporary links that may work during development but would fail when deployed.
 
@@ -227,7 +238,7 @@ Type: `Boolean`
 Default value: `false`  
 Used by: `checkLinks`
 
-Set this option to `true` to fail the task if any links contain an empty [fragment identifier (hash)](http://en.wikipedia.org/wiki/Fragment_identifier) such as `<a href="#">`.
+Set this option to `true` to fail the task if any links contain an empty [fragment identifier (hash)](https://en.wikipedia.org/wiki/Fragment_identifier) such as `<a href="#">`.
 
 This is useful to identify placeholder links that haven't been updated.
 
@@ -246,9 +257,9 @@ This is useful for links that are not accessible during development or known to 
 Type: `Boolean`  
 Default value: `false`
 
-Enabling `checkXhtml` attempts to parse each URL's content as [XHTML](http://en.wikipedia.org/wiki/XHTML) and fails if there are any structural errors.
+Enabling `checkXhtml` attempts to parse each URL's content as [XHTML](https://en.wikipedia.org/wiki/XHTML) and fails if there are any structural errors.
 
-This can be useful to ensure a page's structure is well-formed and unambiguous for browsers.
+This is useful to ensure a page's structure is well-formed and unambiguous for browsers.
 
 #### checkCaching
 

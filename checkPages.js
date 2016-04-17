@@ -86,12 +86,12 @@ module.exports = function(host, options, done) {
   }
 
   // Returns a callback to test the specified link
-  function testLink(page, link, retryWithGet) {
+  function testLink(page, link, retryWithGet, trySecure) {
     return function(callback) {
       var logError = logPageError.bind(null, page);
+      var parsedLink = url.parse(link);
       // Check if the link has already been tested (ignore client-side hash)
-      if (!retryWithGet) {
-        var parsedLink = url.parse(link);
+      if (!retryWithGet && !trySecure) {
         // Warn for empty fragments (even when skipping)
         if (options.noEmptyFragments && (parsedLink.hash === '#')) {
           logError('Empty fragment: ' + link);
@@ -108,7 +108,7 @@ module.exports = function(host, options, done) {
       var start = Date.now();
       var hash = null;
       var linkHash = null;
-      if (options.queryHashes) {
+      if (options.queryHashes && !trySecure) {
         // Create specified hash algorithm
         var query = url.parse(link, true).query;
         if (query.sha1) {
@@ -129,7 +129,9 @@ module.exports = function(host, options, done) {
         followRedirect: !options.noRedirects
       })
         .on('error', function(err) {
-          logError('Link error (' + err.message + '): ' + link + ' (' + (Date.now() - start) + 'ms)');
+          if (!trySecure) {
+            logError('Link error (' + err.message + '): ' + link + ' (' + (Date.now() - start) + 'ms)');
+          }
           req.abort();
           callback();
         })
@@ -140,7 +142,11 @@ module.exports = function(host, options, done) {
         .on('end', function() {
           var elapsed = Date.now() - start;
           if ((200 <= res.statusCode) && (res.statusCode < 300)) {
-            host.log('Link: ' + link + ' (' + elapsed + 'ms)');
+            if (trySecure) {
+              logError('Insecure link: ' + trySecure);
+            } else {
+              host.log('Link: ' + link + ' (' + elapsed + 'ms)');
+            }
             if (hash) {
               hash.end();
               var contentHash = hash.read();
@@ -150,7 +156,13 @@ module.exports = function(host, options, done) {
                 logError('Hash error (' + contentHash.toLowerCase() + '): ' + link);
               }
             }
-          } else if (useGetRequest) {
+            if (options.preferSecure && (parsedLink.protocol === 'http:')) {
+              parsedLink.protocol = 'https:';
+              var secureLink = url.format(parsedLink);
+              testLink(page, secureLink, false, link)(callback);
+              return;
+            }
+          } else if (useGetRequest && !trySecure) {
             if (((300 <= res.statusCode) && (res.statusCode < 400)) && options.noRedirects) {
               logError('Redirected link (' + res.statusCode + '): ' + link + ' -> ' + (res.headers.location || '[Missing Location header]') + ' (' + elapsed + 'ms)');
             } else {
@@ -158,7 +170,7 @@ module.exports = function(host, options, done) {
             }
           } else {
             // Retry HEAD request as GET to be sure
-            testLink(page, link, true)(callback);
+            testLink(page, link, true, trySecure)(callback);
             return;
           }
           callback();
@@ -168,7 +180,7 @@ module.exports = function(host, options, done) {
         hash.setEncoding('hex');
         req.pipe(hash);
       }
-      if (options.noLocalLinks) {
+      if (options.noLocalLinks && !trySecure) {
         var localhost = /^(localhost)|(127\.\d\d?\d?\.\d\d?\d?\.\d\d?\d?)|(\[[0:]*:[0:]*:0?0?0?1\])$/i;
         if (localhost.test(req.uri.host)) {
           logError('Local link: ' + link);
@@ -324,6 +336,7 @@ module.exports = function(host, options, done) {
   options.noLocalLinks = !!options.noLocalLinks;
   options.noEmptyFragments = !!options.noEmptyFragments;
   options.queryHashes = !!options.queryHashes;
+  options.preferSecure = !!options.preferSecure;
   options.linksToIgnore = options.linksToIgnore || [];
   if (!Array.isArray(options.linksToIgnore)) {
     throw new Error('linksToIgnore option is invalid; it should be an array');

@@ -57,7 +57,7 @@ function runTest(options, callback) {
 function testOutput(test, log, error, exception) {
   return function(err, context, count) {
     if (err || exception) {
-      test.equal(err.message, exception, 'Wrong exception text');
+      test.equal(err.message, exception || '[No exception]', 'Wrong exception text');
     }
     if (context) {
       test.equal(context.log.length, log.length, 'Wrong log count');
@@ -699,6 +699,109 @@ exports.checkPages = {
            '3 issues. (Set options.summary for a summary.)'));
       }
     });
+  },
+
+  checkLinksPreferSecureHttp: function(test) {
+    test.expect(22);
+    nockFiles(['preferSecure.html']);
+    nock('http://example.com')
+      .head('/insecure1').reply(200)
+      .head('/insecure2').reply(200)
+      .head('/insecure3').reply(500)
+      .get('/insecure3').reply(200)
+      .head('/insecure4').reply(200)
+      .head('/insecure5').reply(500)
+      .get('/insecure5').reply(200)
+      .head('/insecure6').reply(200)
+      .head('/insecure7').reply(200);
+    nock('https://example.com')
+      .head('/insecure1').reply(200)
+      .head('/secure1').reply(200)
+      .head('/insecure2').reply(404)
+      .head('/insecure3').reply(200)
+      .head('/insecure4').reply(500)
+      .get('/insecure4').reply(200)
+      .head('/insecure5').reply(500)
+      .get('/insecure5').reply(200)
+      .head('/insecure6').reply(200)
+      .head('/insecure7').reply(200);
+    nock('http://localhost')
+      .head('/insecure8').reply(200);
+    nock('https://localhost')
+      .head('/insecure8').reply(200);
+    runTest({
+      pageUrls: ['http://example.com/preferSecure.html'],
+      checkLinks: true,
+      preferSecure: true,
+      noLocalLinks: true
+    },
+    testOutput(test,
+      ['Page: http://example.com/preferSecure.html (00ms)',
+       'Link: http://example.com/insecure1 (00ms)',
+       'Link: https://example.com/secure1 (00ms)',
+       'Link: http://example.com/insecure2 (00ms)',
+       'Link: http://example.com/insecure3 (00ms)',
+       'Link: http://example.com/insecure4 (00ms)',
+       'Link: http://example.com/insecure5 (00ms)',
+       'Link: http://example.com/insecure6 (00ms)',
+       'Link: http://example.com/insecure7 (00ms)',
+       'Link: http://localhost/insecure8 (00ms)'],
+      ['Insecure link: http://example.com/insecure1',
+       'Insecure link: http://example.com/insecure3',
+       'Insecure link: http://example.com/insecure4',
+       'Insecure link: http://example.com/insecure5',
+       'Insecure link: http://example.com/insecure6',
+       'Insecure link: http://example.com/insecure7',
+       'Local link: http://localhost/insecure8',
+       'Insecure link: http://localhost/insecure8'],
+       '8 issues. (Set options.summary for a summary.)'));
+  },
+
+  checkLinksPreferSecureHttps: function(test) {
+    test.expect(18);
+    nockFiles(['preferSecure.html'], 'https://example.com');
+    nock('http://example.com')
+      .head('/insecure1').reply(200)
+      .head('/insecure2').reply(200)
+      .head('/insecure3').reply(500)
+      .get('/insecure3').reply(200)
+      .head('/insecure4').reply(200)
+      .head('/insecure5').reply(500)
+      .get('/insecure5').reply(200);
+    nock('https://example.com')
+      .head('/insecure1').reply(200)
+      .head('/secure1').reply(200)
+      .head('/insecure2').reply(404)
+      .head('/insecure3').reply(200)
+      .head('/insecure4').reply(500)
+      .get('/insecure4').reply(200)
+      .head('/insecure5').reply(500)
+      .get('/insecure5').reply(200)
+      .head('/insecure6').reply(200)
+      .head('/insecure7').reply(200);
+    nock('https://localhost')
+      .head('/insecure8').reply(200);
+    runTest({
+      pageUrls: ['https://example.com/preferSecure.html'],
+      checkLinks: true,
+      preferSecure: true
+    },
+    testOutput(test,
+      ['Page: https://example.com/preferSecure.html (00ms)',
+       'Link: http://example.com/insecure1 (00ms)',
+       'Link: https://example.com/secure1 (00ms)',
+       'Link: http://example.com/insecure2 (00ms)',
+       'Link: http://example.com/insecure3 (00ms)',
+       'Link: http://example.com/insecure4 (00ms)',
+       'Link: http://example.com/insecure5 (00ms)',
+       'Link: https://example.com/insecure6 (00ms)',
+       'Link: https://example.com/insecure7 (00ms)',
+       'Link: https://localhost/insecure8 (00ms)'],
+      ['Insecure link: http://example.com/insecure1',
+       'Insecure link: http://example.com/insecure3',
+       'Insecure link: http://example.com/insecure4',
+       'Insecure link: http://example.com/insecure5'],
+       '4 issues. (Set options.summary for a summary.)'));
   },
 
   checkLinksInvalidProtocol: function(test) {
