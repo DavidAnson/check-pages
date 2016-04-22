@@ -8,17 +8,17 @@
 [![Coverage][coveralls-image]][coveralls-url]
 [![License][license-image]][license-url]
 
-
 ## Install
 
 ```shell
 npm install check-pages --save-dev
 ```
 
-If you're using [Grunt](http://gruntjs.com/), the [`grunt-check-pages`](https://www.npmjs.com/package/grunt-check-pages) package wraps this functionality in a Grunt task.
+If you're using [Grunt](http://gruntjs.com/), the [`grunt-check-pages` package](https://www.npmjs.com/package/grunt-check-pages) wraps this functionality in a Grunt task.
 
 If you're using [Gulp](http://gulpjs.com/) or another framework, the example below shows how to integrate `check-pages` into your workflow.
 
+For direct use, the [`check-pages-cli` package](https://github.com/DavidAnson/check-pages-cli) wraps `check-pages` with a command-line interface.
 
 ## Overview
 
@@ -34,7 +34,6 @@ By providing a list of pages to scan, the task can:
 * Validate a page's response time is below some threshold
 * Validate a page takes advantage of [caching for better performance](https://developers.google.com/speed/docs/insights/LeverageBrowserCaching)
 * Validate a page takes advantage of [compression for better performance](https://developers.google.com/speed/docs/insights/EnableCompression)
-
 
 ## Usage
 
@@ -53,20 +52,21 @@ gulp.task("checkDev", [ "start-development-server" ], function(callback) {
       'http://localhost:8080/about.html'
     ],
     checkLinks: true,
-    onlySameDomain: true,
-    queryHashes: true,
-    noRedirects: true,
-    noLocalLinks: true,
-    noEmptyFragments: true,
     linksToIgnore: [
       'http://localhost:8080/broken.html'
     ],
-    checkXhtml: true,
+    noEmptyFragments: true,
+    noLocalLinks: true,
+    noRedirects: true,
+    onlySameDomain: true,
+    preferSecure: true,
+    queryHashes: true,
     checkCaching: true,
     checkCompression: true,
+    checkXhtml: true,
+    summary: true,
     maxResponseTime: 200,
-    userAgent: 'custom-user-agent/1.2.3',
-    summary: true
+    userAgent: 'custom-user-agent/1.2.3'
   };
   checkPages(console, options, callback);
 });
@@ -85,7 +85,6 @@ gulp.task("checkProd", function(callback) {
 });
 ```
 
-
 ## API
 
 ```js
@@ -99,7 +98,6 @@ gulp.task("checkProd", function(callback) {
  */
 module.exports = function(host, options, done) { ... }
 ```
-
 
 ### Host
 
@@ -123,7 +121,6 @@ Type: `Function` (parameters: `String`)
 *Required*
 
 Function used to log error messages.
-
 
 ### Options
 
@@ -170,51 +167,25 @@ The following element/attribute pairs are used to identify links:
 * `video`/`src`
 * `video`/`poster`
 
-#### onlySameDomain
+#### linksToIgnore
+
+Type: `Array` of `String`  
+Default value: `undefined`  
+Used by: `checkLinks`
+
+`linksToIgnore` specifies a list of URLs that should be ignored by the link checker.
+
+This is useful for links that are not accessible during development or known to be unreliable.
+
+#### noEmptyFragments
 
 Type: `Boolean`  
 Default value: `false`  
 Used by: `checkLinks`
 
-Set this option to `true` to block the checking of links on different domains than the referring page.
+Set this option to `true` to fail the task if any links contain an empty [fragment identifier (hash)](https://en.wikipedia.org/wiki/Fragment_identifier) such as `<a href="#">`.
 
-This is useful during development when external sites aren't changing and don't need to be checked.
-
-#### queryHashes
-
-Type: `Boolean`  
-Default value: `false`  
-Used by: `checkLinks`
-
-Set this option to `true` to verify links with [file hashes](https://en.wikipedia.org/wiki/List_of_hash_functions) in the query string point to content that hashes to the expected value.
-
-Query hashes can be used to [invalidate cached responses](https://developers.google.com/web/fundamentals/performance/optimizing-content-efficiency/http-caching#invalidating-and-updating-cached-responses) when [leveraging browser caching](https://developers.google.com/speed/docs/insights/LeverageBrowserCaching) via long cache lifetimes.
-
-Supported hash functions are:
-
-* image.png?[crc32](https://en.wikipedia.org/wiki/Cyclic_redundancy_check)=e4f013b5
-* styles.css?[md5](https://en.wikipedia.org/wiki/MD5)=4f47458e34bc855a46349c1335f58cc3
-* archive.zip?[sha1](https://en.wikipedia.org/wiki/SHA-1)=9511fa1a787d021bdf3aa9538029a44209fb5c4c
-
-#### preferSecure
-
-Type: `Boolean`  
-Default value: `false`  
-Used by: `checkLinks`
-
-Set this option to `true` to fail the task if any HTTP links are present where the corresponding HTTPS link is also valid.
-
-This is useful to ensure outgoing links use a secure protocol wherever possible.
-
-#### noRedirects
-
-Type: `Boolean`  
-Default value: `false`  
-Used by: `checkLinks`
-
-Set this option to `true` to fail the task if any [HTTP redirects](https://en.wikipedia.org/wiki/URL_redirection) are encountered.
-
-This is useful to ensure outgoing links are to the content's canonical location.
+This is useful to identify placeholder links that haven't been updated.
 
 #### noLocalLinks
 
@@ -232,34 +203,51 @@ The list of host names recognized as `localhost` are:
 * 127.0.0.1 (and the rest of the `127.0.0.0/8` address block)
 * ::1 (and its expanded forms)
 
-#### noEmptyFragments
+#### noRedirects
 
 Type: `Boolean`  
 Default value: `false`  
 Used by: `checkLinks`
 
-Set this option to `true` to fail the task if any links contain an empty [fragment identifier (hash)](https://en.wikipedia.org/wiki/Fragment_identifier) such as `<a href="#">`.
+Set this option to `true` to fail the task if any [HTTP redirects](https://en.wikipedia.org/wiki/URL_redirection) are encountered.
 
-This is useful to identify placeholder links that haven't been updated.
+This is useful to ensure outgoing links are to the content's canonical location.
 
-#### linksToIgnore
-
-Type: `Array` of `String`  
-Default value: `undefined`  
-Used by: `checkLinks`
-
-`linksToIgnore` specifies a list of URLs that should be ignored by the link checker.
-
-This is useful for links that are not accessible during development or known to be unreliable.
-
-#### checkXhtml
+#### onlySameDomain
 
 Type: `Boolean`  
-Default value: `false`
+Default value: `false`  
+Used by: `checkLinks`
 
-Enabling `checkXhtml` attempts to parse each URL's content as [XHTML](https://en.wikipedia.org/wiki/XHTML) and fails if there are any structural errors.
+Set this option to `true` to block the checking of links on different domains than the referring page.
 
-This is useful to ensure a page's structure is well-formed and unambiguous for browsers.
+This is useful during development when external sites aren't changing and don't need to be checked.
+
+#### preferSecure
+
+Type: `Boolean`  
+Default value: `false`  
+Used by: `checkLinks`
+
+Set this option to `true` to fail the task if any HTTP links are present where the corresponding HTTPS link is also valid.
+
+This is useful to ensure outgoing links use a secure protocol wherever possible.
+
+#### queryHashes
+
+Type: `Boolean`  
+Default value: `false`  
+Used by: `checkLinks`
+
+Set this option to `true` to verify links with [file hashes](https://en.wikipedia.org/wiki/List_of_hash_functions) in the query string point to content that hashes to the expected value.
+
+Query hashes can be used to [invalidate cached responses](https://developers.google.com/web/fundamentals/performance/optimizing-content-efficiency/http-caching#invalidating-and-updating-cached-responses) when [leveraging browser caching](https://developers.google.com/speed/docs/insights/LeverageBrowserCaching) via long cache lifetimes.
+
+Supported hash functions are:
+
+* image.png?[crc32](https://en.wikipedia.org/wiki/Cyclic_redundancy_check)=e4f013b5
+* styles.css?[md5](https://en.wikipedia.org/wiki/MD5)=4f47458e34bc855a46349c1335f58cc3
+* archive.zip?[sha1](https://en.wikipedia.org/wiki/SHA-1)=9511fa1a787d021bdf3aa9538029a44209fb5c4c
 
 #### checkCaching
 
@@ -279,6 +267,24 @@ Enabling `checkCompression` verifies the HTTP [`Content-Encoding`](https://tools
 
 This is useful to ensure a page makes use of compression for better performance.
 
+#### checkXhtml
+
+Type: `Boolean`  
+Default value: `false`
+
+Enabling `checkXhtml` attempts to parse each URL's content as [XHTML](https://en.wikipedia.org/wiki/XHTML) and fails if there are any structural errors.
+
+This is useful to ensure a page's structure is well-formed and unambiguous for browsers.
+
+#### summary
+
+Type: `Boolean`  
+Default value: `false`
+
+Enabling the `summary` option logs a summary of each issue found after all checks have completed.
+
+This makes it easy to pick out failures when running tests against many pages.
+
 #### maxResponseTime
 
 Type: `Number`  
@@ -297,23 +303,12 @@ Default value: `check-pages/x.y.z`
 
 This is useful for pages that alter their behavior based on the user agent. Setting the value `null` omits the `User-Agent` header entirely.
 
-#### summary
-
-Type: `Boolean`  
-Default value: `false`
-
-Enabling the `summary` option logs a summary of each issue found after all checks have completed.
-
-This makes it easy to pick out failures when running tests against many pages.
-
-
 ## Release History
 
 * 0.7.0 - Initial release, extract functionality from `grunt-check-pages` for use with Gulp.
 * 0.7.1 - Fix misreporting of "Bad link" for redirected links when noRedirects enabled.
 * 0.8.0 - Suppress redundant link checks, support `noEmptyFragments` option, update dependencies.
 * 0.9.0 - Add support for checking local content via the 'file:' protocol, update dependencies.
-
 
 [npm-image]: https://img.shields.io/npm/v/check-pages.svg
 [npm-url]: https://www.npmjs.com/package/check-pages
