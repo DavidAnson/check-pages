@@ -62,7 +62,10 @@ function testOutput(test, log, error, exception) {
     if (context) {
       test.equal(context.log.length, log.length, 'Wrong log count');
       test.equal(context.error.length, error.length, 'Wrong error count');
-      test.equal(context.error.length - (context.options.summary ? 1 : 0), count, 'Wrong issue count');
+      var issueCount = context.options.terse
+        ? context.log[0].match(/found (\d+) issue/)[1]
+        : context.error.length - (context.options.summary ? 1 : 0);
+      test.equal(issueCount, count, 'Wrong issue count');
       while (context.log.length && log.length) {
         test.equal(context.log.shift().replace(/\(\d+ms\)/g, '(00ms)'), log.shift(), 'Wrong log item');
       }
@@ -1275,6 +1278,71 @@ exports.checkPages = {
          '  Bad link (404): http://example.com/broken0 (00ms)\n' +
          '  Bad link (500): http://example.com/broken1 (00ms)\n'],
        '5 issues.'));
+  },
+
+  // terse functionality
+
+  terse: function(test) {
+    test.expect(5);
+    nockFiles(['multipleErrors.html', 'brokenLinks.html']);
+    nock('http://example.com')
+      .get('/ok').reply(200)
+      .get('/notFound').reply(404)
+      .head('/broken0').reply(404)
+      .get('/broken0').reply(404)
+      .head('/broken1').reply(500)
+      .get('/broken1').reply(500);
+    nockLinks(['link0', 'link1', 'link2']);
+    runTest({
+      pageUrls: ['http://example.com/notFound',
+                 'http://example.com/ok',
+                 'http://example.com/multipleErrors.html',
+                 'http://example.com/brokenLinks.html'],
+      checkLinks: true,
+      checkXhtml: true,
+      terse: true
+    },
+    testOutput(test,
+      ['Checked 4 pages and 5 links, found 5 issues.'],
+      [],
+      '5 issues. (Set options.summary for a summary.)'));
+  },
+
+  // summary/terse functionality
+
+  summaryWithTerse: function(test) {
+    test.expect(6);
+    nockFiles(['multipleErrors.html', 'brokenLinks.html']);
+    nock('http://example.com')
+      .get('/ok').reply(200)
+      .get('/notFound').reply(404)
+      .head('/broken0').reply(404)
+      .get('/broken0').reply(404)
+      .head('/broken1').reply(500)
+      .get('/broken1').reply(500);
+    nockLinks(['link0', 'link1', 'link2']);
+    runTest({
+      pageUrls: ['http://example.com/notFound',
+                 'http://example.com/ok',
+                 'http://example.com/multipleErrors.html',
+                 'http://example.com/brokenLinks.html'],
+      checkLinks: true,
+      checkXhtml: true,
+      summary: true,
+      terse: true
+    },
+    testOutput(test,
+      ['Checked 4 pages and 5 links, found 5 issues.'],
+      ['Summary of issues:\n' +
+         ' http://example.com/notFound\n' +
+         '  Bad page (404): http://example.com/notFound (00ms)\n' +
+         ' http://example.com/multipleErrors.html\n' +
+         '  Invalid character entity, Line: 4, Column: 23, Char: ;\n' +
+         '  Unexpected close tag, Line: 5, Column: 6, Char: >\n' +
+         ' http://example.com/brokenLinks.html\n' +
+         '  Bad link (404): http://example.com/broken0 (00ms)\n' +
+         '  Bad link (500): http://example.com/broken1 (00ms)\n'],
+      '5 issues.'));
   },
 
   // Nock configuration

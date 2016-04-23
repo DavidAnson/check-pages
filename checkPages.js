@@ -33,6 +33,8 @@ module.exports = function(host, options, done) {
   var pendingCallbacks = [];
   var issues = [];
   var testedLinks = [];
+  var pageCount = 0;
+  var linkCount = 0;
 
   // Applies key/value pairs from src to dst, returning dst
   function assign(dst, src) {
@@ -47,6 +49,11 @@ module.exports = function(host, options, done) {
     return assign({}, obj);
   }
 
+  // Returns the correct plural form of a count
+  function pluralize(count, word) {
+    return count + ' ' + word + (count === 1 ? '' : 's');
+  }
+
   // Returns a request object suitable for the specified URI
   function requestFor(uri) {
     if (url.parse(uri).protocol === 'file:') {
@@ -57,9 +64,18 @@ module.exports = function(host, options, done) {
     return request;
   }
 
-  // Logs an error for a page
-  function logPageError(page, message) {
-    host.error(message);
+  // Logs a message via the host
+  function log(message) {
+    if (!options.terse) {
+      host.log(message);
+    }
+  }
+
+  // Logs an error via the host
+  function logError(page, message) {
+    if (!options.terse) {
+      host.error(message);
+    }
     issues.push([page, message]);
   }
 
@@ -88,18 +104,18 @@ module.exports = function(host, options, done) {
   // Returns a callback to test the specified link
   function testLink(page, link, retryWithGet, trySecure) {
     return function(callback) {
-      var logError = logPageError.bind(null, page);
+      var logPageError = logError.bind(null, page);
       var parsedLink = url.parse(link);
       // Check if the link has already been tested (ignore client-side hash)
       if (!retryWithGet && !trySecure) {
         // Warn for empty fragments (even when skipping)
         if (options.noEmptyFragments && (parsedLink.hash === '#')) {
-          logError('Empty fragment: ' + link);
+          logPageError('Empty fragment: ' + link);
         }
         parsedLink.hash = null;
         var noHashLink = url.format(parsedLink);
         if (testedLinks.indexOf(noHashLink) !== -1) {
-          host.log('Visited link: ' + link);
+          log('Visited link: ' + link);
           return callback();
         }
         testedLinks.push(noHashLink);
@@ -130,7 +146,7 @@ module.exports = function(host, options, done) {
       })
         .on('error', function(err) {
           if (!trySecure) {
-            logError('Link error (' + err.message + '): ' + link + ' (' + (Date.now() - start) + 'ms)');
+            logPageError('Link error (' + err.message + '): ' + link + ' (' + (Date.now() - start) + 'ms)');
           }
           req.abort();
           callback();
@@ -143,17 +159,17 @@ module.exports = function(host, options, done) {
           var elapsed = Date.now() - start;
           if ((200 <= res.statusCode) && (res.statusCode < 300)) {
             if (trySecure) {
-              logError('Insecure link: ' + trySecure);
+              logPageError('Insecure link: ' + trySecure);
             } else {
-              host.log('Link: ' + link + ' (' + elapsed + 'ms)');
+              log('Link: ' + link + ' (' + elapsed + 'ms)');
             }
             if (hash) {
               hash.end();
               var contentHash = hash.read();
               if (linkHash.toUpperCase() === contentHash.toUpperCase()) {
-                host.log('Hash: ' + link);
+                log('Hash: ' + link);
               } else {
-                logError('Hash error (' + contentHash.toLowerCase() + '): ' + link);
+                logPageError('Hash error (' + contentHash.toLowerCase() + '): ' + link);
               }
             }
             if (options.preferSecure && (parsedLink.protocol === 'http:')) {
@@ -164,9 +180,9 @@ module.exports = function(host, options, done) {
             }
           } else if (useGetRequest && !trySecure) {
             if (((300 <= res.statusCode) && (res.statusCode < 400)) && options.noRedirects) {
-              logError('Redirected link (' + res.statusCode + '): ' + link + ' -> ' + (res.headers.location || '[Missing Location header]') + ' (' + elapsed + 'ms)');
+              logPageError('Redirected link (' + res.statusCode + '): ' + link + ' -> ' + (res.headers.location || '[Missing Location header]') + ' (' + elapsed + 'ms)');
             } else {
-              logError('Bad link (' + res.statusCode + '): ' + link + ' (' + elapsed + 'ms)');
+              logPageError('Bad link (' + res.statusCode + '): ' + link + ' (' + elapsed + 'ms)');
             }
           } else {
             // Retry HEAD request as GET to be sure
@@ -183,7 +199,7 @@ module.exports = function(host, options, done) {
       if (options.noLocalLinks && !trySecure) {
         var localhost = /^(localhost)|(127\.\d\d?\d?\.\d\d?\d?\.\d\d?\d?)|(\[[0:]*:[0:]*:0?0?0?1\])$/i;
         if (localhost.test(req.uri.host)) {
-          logError('Local link: ' + link);
+          logPageError('Local link: ' + link);
         }
       }
     };
@@ -210,6 +226,7 @@ module.exports = function(host, options, done) {
             // Add to beginning of queue (in order) so links gets processed before the next page
             pendingCallbacks.splice(index, 0, testLink(page, resolvedLink));
             index++;
+            linkCount++;
           }
         });
       }
@@ -219,20 +236,21 @@ module.exports = function(host, options, done) {
 
   // Returns a callback to test the specified page
   function testPage(page) {
+    pageCount++;
     return function(callback) {
-      var logError = logPageError.bind(null, page);
+      var logPageError = logError.bind(null, page);
       var start = Date.now();
       requestFor(page).get(normalizeUri(page), function(err, res, body) {
         var elapsed = Date.now() - start;
         if (err) {
-          logError('Page error (' + err.message + '): ' + page + ' (' + elapsed + 'ms)');
+          logPageError('Page error (' + err.message + '): ' + page + ' (' + elapsed + 'ms)');
         } else if ((res.statusCode < 200) || (300 <= res.statusCode)) {
-          logError('Bad page (' + res.statusCode + '): ' + page + ' (' + elapsed + 'ms)');
+          logPageError('Bad page (' + res.statusCode + '): ' + page + ' (' + elapsed + 'ms)');
         } else {
           if (page === res.request.href) {
-            host.log('Page: ' + page + ' (' + elapsed + 'ms)');
+            log('Page: ' + page + ' (' + elapsed + 'ms)');
           } else {
-            host.log('Page: ' + page + ' -> ' + res.request.href + ' (' + elapsed + 'ms)');
+            log('Page: ' + page + ' -> ' + res.request.href + ' (' + elapsed + 'ms)');
             // Update page to account for redirects
             page = res.request.href;
           }
@@ -252,14 +270,14 @@ module.exports = function(host, options, done) {
             // Check the page's structure for XHTML compliance
             var parser = sax.parser(true);
             parser.onerror = function(error) {
-              logError(error.message.replace(/\n/g, ', '));
+              logPageError(error.message.replace(/\n/g, ', '));
             };
             parser.write(body);
           }
           if (options.maxResponseTime) {
             // Check the page's response time
             if (options.maxResponseTime < elapsed) {
-              logError('Page response took more than ' + options.maxResponseTime + 'ms to complete');
+              logPageError('Page response took more than ' + options.maxResponseTime + 'ms to complete');
             }
           }
           if (options.checkCaching) {
@@ -267,18 +285,18 @@ module.exports = function(host, options, done) {
             var cacheControl = res.headers['cache-control'];
             if (cacheControl) {
               if (!/max-age|max-stale|min-fresh|must-revalidate|no-cache|no-store|no-transform|only-if-cached|private|proxy-revalidate|public|s-maxage/.test(cacheControl)) {
-                logError('Invalid Cache-Control header in response: ' + cacheControl);
+                logPageError('Invalid Cache-Control header in response: ' + cacheControl);
               }
             } else {
-              logError('Missing Cache-Control header in response');
+              logPageError('Missing Cache-Control header in response');
             }
             var etag = res.headers.etag;
             if (etag) {
               if (!/^(W\/)?"[^"]*"$/.test(etag)) {
-                logError('Invalid ETag header in response: ' + etag);
+                logPageError('Invalid ETag header in response: ' + etag);
               }
             } else if (!cacheControl || !/no-cache|max-age=0/.test(cacheControl)) { // Don't require ETag for responses that won't be cached
-              logError('Missing ETag header in response');
+              logPageError('Missing ETag header in response');
             }
           }
           if (options.checkCompression) {
@@ -286,10 +304,10 @@ module.exports = function(host, options, done) {
             var contentEncoding = res.headers['content-encoding'];
             if (contentEncoding) {
               if (!/^(deflate|gzip)$/.test(contentEncoding)) {
-                logError('Invalid Content-Encoding header in response: ' + contentEncoding);
+                logPageError('Invalid Content-Encoding header in response: ' + contentEncoding);
               }
             } else {
-              logError('Missing Content-Encoding header in response');
+              logPageError('Missing Content-Encoding header in response');
             }
           }
         }
@@ -359,6 +377,7 @@ module.exports = function(host, options, done) {
     }
   }
   options.summary = !!options.summary;
+  options.terse = !!options.terse;
 
   // Set request defaults
   var defaults = {
@@ -383,6 +402,12 @@ module.exports = function(host, options, done) {
   pendingCallbacks.push(function() {
     var err = null;
     var issueCount = issues.length;
+    if (options.terse) {
+      host.log('Checked ' +
+        pluralize(pageCount, 'page') + ' and ' +
+        pluralize(linkCount, 'link') + ', found ' +
+        pluralize(issueCount, 'issue') + '.');
+    }
     if (issueCount) {
       if (options.summary) {
         var summary = 'Summary of issues:\n';
@@ -398,7 +423,7 @@ module.exports = function(host, options, done) {
         });
         host.error(summary);
       }
-      err = new Error(issueCount + ' issue' + (issueCount > 1 ? 's' : '') + '.' +
+      err = new Error(pluralize(issueCount, 'issue') + '.' +
         (options.summary ? '' : ' (Set options.summary for a summary.)'));
     }
     done(err, issueCount);

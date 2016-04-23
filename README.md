@@ -65,6 +65,7 @@ gulp.task("checkDev", [ "start-development-server" ], function(callback) {
     checkCompression: true,
     checkXhtml: true,
     summary: true,
+    terse: true,
     maxResponseTime: 200,
     userAgent: 'custom-user-agent/1.2.3'
   };
@@ -283,7 +284,16 @@ Default value: `false`
 
 Enabling the `summary` option logs a summary of each issue found after all checks have completed.
 
-This makes it easy to pick out failures when running tests against many pages.
+This makes it easy to pick out failures when running tests against many pages. May be combined with the `terse` option.
+
+#### terse
+
+Type: `Boolean`  
+Default value: `false`
+
+Enabling the `terse` option suppresses the logging of each check as it runs, instead displaying a brief overview at the end.
+
+This is useful for scripting or to reduce output. May be combined with the `summary` option.
 
 #### maxResponseTime
 
