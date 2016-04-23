@@ -319,6 +319,7 @@ This is useful for pages that alter their behavior based on the user agent. Sett
 * 0.7.1 - Fix misreporting of "Bad link" for redirected links when noRedirects enabled.
 * 0.8.0 - Suppress redundant link checks, support `noEmptyFragments` option, update dependencies.
 * 0.9.0 - Add support for checking local content via the 'file:' protocol, update dependencies.
+* 0.10.0 - International URLs, `preferSecure` option, `terse` option, `srcset`, update dependencies.
 
 [npm-image]: https://img.shields.io/npm/v/check-pages.svg
 [npm-url]: https://www.npmjs.com/package/check-pages
