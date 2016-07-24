@@ -581,7 +581,7 @@ exports.checkPages = {
   },
 
   checkLinksNoLocalLinks: function(test) {
-    test.expect(16);
+    test.expect(17);
     nockFiles(['localLinks.html']);
     nock('http://localhost').head('/').reply(200);
     nock('http://example.com').head('/').reply(200);
@@ -590,6 +590,7 @@ exports.checkPages = {
     nock('http://[::1]:80').head('/').reply(200);
     nock('http://[ff02::1]:80').head('/').reply(200);
     nock('http://[::1]:80').head('/').reply(200);
+    nock('http://example.com').head('/no-protocol').reply(200);
     runTest({
       pageUrls: ['http://example.com/localLinks.html'],
       checkLinks: true,
@@ -603,7 +604,8 @@ exports.checkPages = {
        'Link: http://169.254.1.1/ (00ms)',
        'Link: http://[::1]/ (00ms)',
        'Link: http://[ff02::1]/ (00ms)',
-       'Link: http://[0000:0000:0000:0000:0000:0000:0000:0001]/ (00ms)'],
+       'Link: http://[0000:0000:0000:0000:0000:0000:0000:0001]/ (00ms)',
+       'Link: http://example.com/no-protocol (00ms)'],
       ['Local link: http://localhost/',
        'Local link: http://127.0.0.1/',
        'Local link: http://[::1]/',
@@ -697,7 +699,7 @@ exports.checkPages = {
            'Link: http://example.com/compressed?crc32=3477f8a8 (00ms)',
            'Hash: http://example.com/compressed?crc32=3477f8a8'],
           ['Hash error (7f5a1ac1e6dc59679f36482973efc871): http://example.com/brokenLinks.html?md5=abcd',
-           'Hash error (73fb7b7a): http://example.com/localLinks.html?crc32=abcd',
+           'Hash error (e740b4de): http://example.com/localLinks.html?crc32=abcd',
            'Hash error (1353361bfade29f3684fe17c8b388dadbc49cb6d): http://example.com/retryWhenHeadFails.html?sha1=abcd'],
            '3 issues. (Set options.summary for a summary.)'));
       }
@@ -1528,7 +1530,7 @@ exports.checkPages = {
   },
 
   localContentNoLocalLinks: function(test) {
-    test.expect(16);
+    test.expect(17);
     nock('http://localhost').head('/').reply(200);
     nock('http://example.com').head('/').reply(200);
     nock('http://127.0.0.1').head('/').reply(200);
@@ -1554,8 +1556,9 @@ exports.checkPages = {
       ['Local link: http://localhost/',
        'Local link: http://127.0.0.1/',
        'Local link: http://[::1]/',
-       'Local link: http://[0000:0000:0000:0000:0000:0000:0000:0001]/'],
-       '4 issues. (Set options.summary for a summary.)'));
+       'Local link: http://[0000:0000:0000:0000:0000:0000:0000:0001]/',
+       'Link error (ENOENT): file:test/no-protocol (00ms)'],
+       '5 issues. (Set options.summary for a summary.)'));
   },
 
   localContentNoEmptyFragments: function(test) {
@@ -1616,7 +1619,7 @@ exports.checkPages = {
        'Hash: file:test/image.png?md5=e3ece6e91045f18ce18ac25455524cd0',
        'Link: file:test/image.png?key=value (00ms)'],
       ['Hash error (7f5a1ac1e6dc59679f36482973efc871): file:test/brokenLinks.html?md5=abcd',
-       'Hash error (73fb7b7a): file:test/localLinks.html?crc32=abcd',
+       'Hash error (e740b4de): file:test/localLinks.html?crc32=abcd',
        'Hash error (1353361bfade29f3684fe17c8b388dadbc49cb6d): file:test/retryWhenHeadFails.html?sha1=abcd'],
        '3 issues. (Set options.summary for a summary.)'));
   },

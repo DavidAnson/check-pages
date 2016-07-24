@@ -198,7 +198,7 @@ module.exports = function(host, options, done) {
       }
       if (options.noLocalLinks && !trySecure) {
         var localhost = /^(localhost)|(127\.\d\d?\d?\.\d\d?\d?\.\d\d?\d?)|(\[[0:]*:[0:]*:0?0?0?1\])$/i;
-        if (localhost.test(req.uri.host)) {
+        if (req.uri && req.uri.host && localhost.test(req.uri.host)) {
           logPageError('Local link: ' + link);
         }
       }
